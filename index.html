@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="fr" class="pwa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2A2E35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="XYSTOS">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>XYSTOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@200;300;400;500;600&family=Doto:wght@100..900&display=swap">
+<style>
+/* Concept : relief doux, deux jumeaux clair et sombre. Surfaces extrudées, cadrans en creux, un arc orange qui avance, titres en Didone, chiffres en graisse 200. */
+:root{
+  --page:#E5E8EE; --ptx:#1F2A44; --pmu:#66708A; --pacc:#F26A21;
+  --serif:'Doto','DotGothic16',ui-monospace,monospace; --sans:'Geist',system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ptx);font-family:var(--sans);padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));padding-block:30px 60px;min-height:100vh}
+.top{max-width:960px;margin:0 auto 34px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-weight:800;font-size:28px;letter-spacing:.04em}
+.brand span{font-family:var(--sans);font-weight:300;font-size:14px;color:var(--pmu);margin-left:10px;letter-spacing:.02em}
+#pn{display:flex;gap:10px;flex-wrap:wrap}
+#pn button{height:44px;padding:0 20px;border:0;border-radius:22px;background:var(--page);color:var(--pmu);font:inherit;font-size:14px;cursor:pointer;box-shadow:-5px -5px 11px #fff,6px 6px 13px #C3CAD7}
+#pn button:active{box-shadow:inset 3px 3px 7px #C3CAD7,inset -3px -3px 7px #fff}
+#pn button.on{color:var(--ptx);font-weight:500;box-shadow:inset 3px 3px 7px #C3CAD7,inset -3px -3px 7px #fff}
+#pn button:focus-visible{outline:2px solid var(--pacc);outline-offset:3px}
+.stage{display:flex;gap:64px;justify-content:center;flex-wrap:wrap}
+.slot{width:372px;margin:0}
+.slot figcaption{text-align:center;margin-top:20px;font-size:13px;color:var(--pmu);letter-spacing:.06em}
+@media (max-width:420px){.slot{width:100%}.stage{gap:36px}}
+
+/* appareil */
+.dev{position:relative;width:100%;height:790px;border-radius:58px;border:8px solid #15181D;box-shadow:0 0 0 1.5px #7C8495,0 50px 60px -34px rgba(20,30,60,.5);overflow:hidden;font-family:var(--sans);-webkit-font-smoothing:antialiased;background:var(--bg);color:var(--tx)}
+.dev *{box-sizing:border-box}
+.dev.lt{--bg:#EBEEF3;--hi:#FFFFFF;--lo:#C5CCD9;--tx:#1F2A44;--tx2:#5E6A82;--in:#E2E6ED;--ring:#CBD2DE;--acc:#F26A21;--glow:rgba(242,106,33,.32);--a2:#FFB24D}
+.dev.dk{--bg:#2A2E35;--hi:#363B45;--lo:#191C21;--tx:#F3F5F9;--tx2:#9AA3B5;--in:#23262C;--ring:#454B57;--acc:#FF7A2E;--glow:rgba(255,122,46,.5);--a2:#FFC15E}
+:where(.dev button){border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0}
+.dev button:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.isl{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:104px;height:30px;border-radius:20px;background:#000;z-index:8}
+.stat{position:absolute;top:0;left:0;right:0;height:54px;padding:17px 30px 0;display:flex;justify-content:space-between;font-size:14px;font-weight:500;z-index:4}
+.stat span{display:flex;align-items:center;gap:6px}
+.scr{position:absolute;top:54px;left:0;right:0;bottom:0;overflow-y:auto;padding:0 18px 150px;scrollbar-width:none;display:flex;flex-direction:column;gap:18px;z-index:2}
+.scr::-webkit-scrollbar{display:none}
+.scr>*{flex:none}
+.fade{position:absolute;left:0;right:0;bottom:0;height:170px;background:linear-gradient(180deg,transparent,var(--bg) 62%);z-index:3;pointer-events:none}
+.hi{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:124px;height:4px;border-radius:2px;background:var(--tx);opacity:.85;z-index:6}
+
+/* relief */
+.rz{background:var(--bg);box-shadow:-6px -6px 14px var(--hi),7px 7px 16px var(--lo);border-radius:26px}
+.in{background:var(--in);box-shadow:inset 3px 3px 8px var(--lo),inset -3px -3px 8px var(--hi);border-radius:24px}
+.rb{border-radius:50%;background:var(--bg);box-shadow:-5px -5px 12px var(--hi),6px 6px 14px var(--lo);display:flex;align-items:center;justify-content:center;color:var(--tx);flex:none}
+.rb:active,.rz.bt:active{box-shadow:inset 3px 3px 8px var(--lo),inset -3px -3px 8px var(--hi)}
+.acc{color:var(--acc)}
+.tx2{color:var(--tx2)}
+
+/* titres */
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;position:relative}
+.hd h1{font-family:var(--serif);font-weight:800;font-size:32px;letter-spacing:.03em;text-transform:uppercase;margin:0;line-height:1.1}
+.hd .sub{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--tx2);margin-top:8px}
+.mb{width:54px;height:54px;border-radius:19px}
+.menu{position:absolute;right:0;top:62px;width:200px;border-radius:24px;padding:8px;z-index:9}
+.menu button{display:flex;align-items:center;justify-content:space-between;width:100%;height:50px;padding:0 14px;border-radius:16px;font-size:15px;color:var(--tx2)}
+.menu button.on{color:var(--tx);font-weight:500;box-shadow:inset 3px 3px 7px var(--lo),inset -3px -3px 7px var(--hi)}
+.menu button i{width:8px;height:8px;border-radius:50%;background:var(--acc)}
+.sw{display:flex;justify-content:center;align-items:baseline;gap:16px}
+.sw button{font-size:15px;color:var(--tx2);height:44px;padding:0 4px}
+.sw button.on{font-family:var(--serif);font-weight:800;font-size:22px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx)}
+.tabs{display:flex;justify-content:space-between;gap:6px}
+.tabs button{flex:1;height:46px;font-size:14px;color:var(--tx2);position:relative}
+.tabs button.on{color:var(--tx);font-weight:500}
+.tabs button.on::after{content:"";position:absolute;left:18%;right:18%;bottom:2px;height:2px;border-radius:1px;background:var(--acc)}
+.hn{font-weight:200;font-size:64px;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
+.hn em,.u{font-style:normal;font-size:15px;font-weight:400;color:var(--tx2);letter-spacing:0;margin-left:5px}
+.lbl{font-size:12px;color:var(--tx2);letter-spacing:.02em}
+.pill3{display:grid;grid-template-columns:repeat(3,1fr);padding:16px 8px;text-align:center}
+.pill3 div{display:flex;flex-direction:column;gap:5px;position:relative}
+.pill3 div+div::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:1px;background:var(--ring)}
+.pill3 b{font-size:16px;font-weight:500;font-variant-numeric:tabular-nums}
+.pill3 span{font-size:12px;color:var(--tx2)}
+.duo{display:flex;justify-content:center;margin:0 auto;padding:14px 22px;gap:26px;width:max-content;max-width:100%}
+.duo div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px}
+.duo b{font-weight:500;font-size:15px}
+.wrap{position:relative;margin:0 auto}
+.abs{position:absolute;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%)}
+.mk{width:46px;height:46px;border-radius:50%;font-size:15px;font-weight:500;color:var(--tx2)}
+.mk.done{background:var(--in);box-shadow:inset 3px 3px 7px var(--lo),inset -3px -3px 7px var(--hi);color:var(--acc)}
+.mk.cur{color:var(--acc);box-shadow:-5px -5px 12px var(--hi),6px 6px 14px var(--lo),0 0 0 2px var(--acc)}
+.mk.todo{background:var(--bg);box-shadow:-4px -4px 9px var(--hi),5px 5px 11px var(--lo)}
+.stepper{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.sc{padding:14px 12px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.sc .v{font-weight:300;font-size:36px;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.sc .v em{font-style:normal;font-size:14px;color:var(--tx2);margin-left:4px;letter-spacing:0}
+.sc .r{display:flex;gap:10px}
+.sc .rb{width:54px;height:54px}
+.sc .rb.p{color:var(--acc)}
+.bars{display:flex;align-items:flex-end;gap:12px;height:120px;padding:0 6px}
+.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end}
+.bars i{display:block;width:100%;border-radius:8px;background:var(--bg);box-shadow:-3px -3px 7px var(--hi),4px 4px 9px var(--lo)}
+.bars i.on{background:var(--acc);box-shadow:0 0 18px var(--glow)}
+.bars b{font-weight:400;font-size:11px;color:var(--tx2)}
+.dif{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;padding:0 26px;height:92px;border-radius:30px}
+.dif b{display:block;font-family:var(--serif);font-weight:800;font-size:28px;letter-spacing:.04em;text-transform:uppercase}.dif span{font-size:13px;color:var(--tx2)}
+.dif.sg b{color:var(--acc)}
+.row{display:flex;align-items:center;gap:12px;padding:10px 12px 10px 20px;min-height:68px;width:100%;text-align:left;border-radius:24px}
+.row .nm{flex:1;min-width:0}.row .nm b{display:block;font-size:15px;font-weight:500}.row .nm span{font-size:12px;color:var(--tx2)}
+.row .kc{font-size:14px;color:var(--tx2);font-variant-numeric:tabular-nums}
+.ck{width:46px;height:46px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:var(--tx2);background:var(--bg);box-shadow:-3px -3px 7px var(--hi),4px 4px 9px var(--lo)}
+.ck.on{color:var(--acc);background:var(--in);box-shadow:inset 3px 3px 7px var(--lo),inset -3px -3px 7px var(--hi)}
+.modes{display:flex;justify-content:space-around}
+.modes button{width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--tx2);background:var(--bg);box-shadow:-5px -5px 12px var(--hi),6px 6px 14px var(--lo)}
+.modes button.on{color:var(--acc);background:var(--in);box-shadow:inset 3px 3px 8px var(--lo),inset -3px -3px 8px var(--hi)}
+.rate{display:flex;justify-content:space-between;gap:8px}
+.rate button{width:52px;height:52px;border-radius:50%;font-size:17px;font-weight:300;display:flex;align-items:center;justify-content:center;background:var(--bg);box-shadow:-4px -4px 9px var(--hi),5px 5px 11px var(--lo)}
+.rate button.on{color:var(--acc);font-weight:500;background:var(--in);box-shadow:inset 3px 3px 7px var(--lo),inset -3px -3px 7px var(--hi)}
+.chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.chips button{height:48px;padding:0 20px;border-radius:24px;font-size:14px;color:var(--tx2);background:var(--bg);box-shadow:-4px -4px 9px var(--hi),5px 5px 11px var(--lo)}
+.chips button.on{color:var(--acc);background:var(--in);box-shadow:inset 3px 3px 7px var(--lo),inset -3px -3px 7px var(--hi)}
+.note{font-size:14px;line-height:1.5;color:var(--tx2);text-align:center;padding:4px 10px}
+
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 20px;min-height:76px;width:100%;text-align:left}
+.set>div:first-child{min-width:0}.set b{display:block;font-size:15px;font-weight:500}.set>div:first-child span{font-size:12px;color:var(--tx2)}
+.seg{display:flex;padding:4px;gap:4px;border-radius:26px;flex:none}
+.seg button{width:76px;height:44px;border-radius:22px;font-size:13px;color:var(--tx2)}
+.seg button.on{color:var(--acc);font-weight:500;background:var(--bg);box-shadow:-3px -3px 7px var(--hi),4px 4px 9px var(--lo)}
+.swt{display:block;width:64px;height:36px;border-radius:18px;background:var(--in);box-shadow:inset 3px 3px 7px var(--lo),inset -3px -3px 7px var(--hi);position:relative;flex:none}
+.swt i{position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:50%;background:var(--bg);box-shadow:-2px -2px 5px var(--hi),3px 3px 7px var(--lo)}
+.swt.on i{left:32px;background:var(--acc);box-shadow:0 0 14px var(--glow)}
+.rs{display:flex;align-items:center;gap:6px;flex:none}.rs .rb{width:48px;height:48px}
+.rs span{min-width:46px;text-align:center;font-size:16px;color:var(--tx);font-variant-numeric:tabular-nums}
+/* barre d'action */
+.act{position:absolute;left:14px;right:14px;bottom:18px;height:104px;display:grid;grid-template-columns:78px 1fr 78px;align-items:end;z-index:5}
+.cb{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cb button{width:62px;height:62px}
+.cb.m button{width:68px;height:68px;color:var(--acc)}
+.cb span{font-size:11px;color:var(--tx2)}
+.arc{min-width:0;align-self:end}
+.arc svg{display:block;width:100%;height:auto}
+
+.js{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.5;max-height:260px;overflow:auto;padding:14px;border-radius:20px;background:var(--in);box-shadow:inset 3px 3px 8px var(--lo),inset -3px -3px 8px var(--hi);color:var(--tx2);white-space:pre;margin:0;user-select:text}
+.note.acc{color:var(--acc)}
+.b12{position:relative;display:flex;align-items:stretch;gap:3px;height:170px;padding:0 2px}
+.b12 button{flex:1;position:relative;min-width:0;border-radius:8px}
+.b12 button.sel{background:var(--bg);box-shadow:-3px -3px 7px var(--hi),4px 4px 9px var(--lo)}
+.b12 button b{left:0;right:0;text-align:center;font-weight:400;font-size:11px;color:var(--tx2)}
+.b12 button.sel b{color:var(--acc)}
+.b12 button i{display:block;border-radius:5px;background:var(--tx2);opacity:.55;margin:0 22%}
+.b12 button i.proj{background:transparent;border:1.3px dashed var(--tx2);opacity:.8}
+.dotsrow{display:flex;gap:10px;justify-content:center;align-items:center}
+.dotsrow>i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--tx2);display:block}
+.dotsrow>i.on{background:var(--acc);border-color:var(--acc);box-shadow:0 0 10px var(--glow)}
+.dotsrow>i.cu{border-color:var(--acc);box-shadow:0 0 0 4px var(--glow)}
+
+/* mode application : plein écran, sans cadre de téléphone */
+html.pwa,html.pwa body{margin:0;padding:0;height:100%;min-height:0;overflow:hidden;background:#2A2E35;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+.pwa .top,.pwa .slot figcaption{display:none}
+.pwa .stage,.pwa .slot{display:block;width:100%;height:100%;margin:0;gap:0}
+.pwa .dev{position:fixed;inset:0;width:auto!important;height:auto!important;max-width:none;border:0;border-radius:0;box-shadow:none}
+.pwa .isl,.pwa .stat,.pwa .hi{display:none}
+.pwa .scr{top:0;padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+.pwa .act{bottom:calc(16px + env(safe-area-inset-bottom,0px));left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px))}
+.pwa .fade{height:calc(170px + env(safe-area-inset-bottom,0px))}
+</style>
+</head>
+<body>
+
+<div class="top"><div class="brand">XYSTOS<span>iPhone · branché sur le contrat</span></div><nav id="pn" aria-label="Écrans"></nav></div>
+<div class="stage">
+  <figure class="slot"><div class="dev lt" id="pa"></div><figcaption id="cap"></figcaption></figure>
+</div>
+
+<script type="application/json" id="prog">{"schema":1,"revision":1,"generated_at":"2026-10-28T20:15:00+01:00","generator":{"model":"exemple","note":"Fichier d'exemple écrit à la main pour tester le contrat."},"objective":"Prise de force et composition corporelle","horizon":{"start":"2026-11-02","end":"2027-01-24","weeks":12},"constraints":{"max_weekly_load_increase_pct":5,"max_training_days_per_week":5,"min_rest_days_per_week":2,"max_weeks_without_deload":3,"excluded_exercises":[],"equipment":["barre","haltères","poulie","presse"],"limitations":[]},"phases":[{"id":"P1","weeks":[1,4],"focus":"base","volume":"modéré"},{"id":"P2","weeks":[5,8],"focus":"progression","volume":"élevé"},{"id":"P3","weeks":[9,12],"focus":"intensification","volume":"modéré"}],"detailed_until":"2026-11-15","days":[{"date":"2026-11-02","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-02_S01","title":"Haut du corps · force","duration_min":52,"exercises":[{"id":"bench_press","name":"Développé couché","kind":"strength","sets":4,"reps":{"min":5,"max":6},"load_kg":62.5,"rest_s":150,"target_rpe":8},{"id":"barbell_row","name":"Rowing barre","kind":"strength","sets":4,"reps":{"min":8,"max":8},"load_kg":55,"rest_s":120,"target_rpe":8},{"id":"overhead_press","name":"Développé militaire","kind":"strength","sets":3,"reps":{"min":6,"max":8},"load_kg":35,"rest_s":120,"target_rpe":8},{"id":"face_pull","name":"Face pull","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":20,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-02_S01","title":"Haut du corps · allégé","duration_min":38,"exercises":[{"id":"bench_press","name":"Développé couché","kind":"strength","sets":3,"reps":{"min":5,"max":6},"load_kg":62.5,"rest_s":150,"target_rpe":8},{"id":"barbell_row","name":"Rowing barre","kind":"strength","sets":3,"reps":{"min":8,"max":8},"load_kg":55,"rest_s":120,"target_rpe":8},{"id":"overhead_press","name":"Développé militaire","kind":"strength","sets":2,"reps":{"min":6,"max":8},"load_kg":35,"rest_s":120,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-02_S01","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-03","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-03_S02","title":"Bas du corps · force","duration_min":52,"exercises":[{"id":"squat","name":"Squat","kind":"strength","sets":4,"reps":{"min":5,"max":6},"load_kg":80,"rest_s":180,"target_rpe":8},{"id":"romanian_deadlift","name":"Soulevé de terre roumain","kind":"strength","sets":3,"reps":{"min":8,"max":8},"load_kg":90,"rest_s":150,"target_rpe":8},{"id":"walking_lunge","name":"Fente marchée","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":20,"rest_s":90,"target_rpe":8},{"id":"calf_raise","name":"Mollets debout","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":40,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-03_S02","title":"Bas du corps · allégé","duration_min":38,"exercises":[{"id":"squat","name":"Squat","kind":"strength","sets":3,"reps":{"min":5,"max":6},"load_kg":80,"rest_s":180,"target_rpe":8},{"id":"romanian_deadlift","name":"Soulevé de terre roumain","kind":"strength","sets":2,"reps":{"min":8,"max":8},"load_kg":90,"rest_s":150,"target_rpe":8},{"id":"walking_lunge","name":"Fente marchée","kind":"strength","sets":2,"reps":{"min":10,"max":12},"load_kg":20,"rest_s":90,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-03_S02","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-04","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30}}}},{"date":"2026-11-05","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-05_S03","title":"Haut du corps · volume","duration_min":52,"exercises":[{"id":"incline_press","name":"Développé incliné","kind":"strength","sets":4,"reps":{"min":8,"max":10},"load_kg":50,"rest_s":120,"target_rpe":8},{"id":"lat_pulldown","name":"Tirage vertical","kind":"strength","sets":4,"reps":{"min":10,"max":12},"load_kg":55,"rest_s":90,"target_rpe":8},{"id":"lateral_raise","name":"Élévations latérales","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":8,"rest_s":60,"target_rpe":8},{"id":"triceps_pushdown","name":"Extension triceps","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":25,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-05_S03","title":"Haut du corps · allégé","duration_min":38,"exercises":[{"id":"incline_press","name":"Développé incliné","kind":"strength","sets":3,"reps":{"min":8,"max":10},"load_kg":50,"rest_s":120,"target_rpe":8},{"id":"lat_pulldown","name":"Tirage vertical","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":55,"rest_s":90,"target_rpe":8},{"id":"lateral_raise","name":"Élévations latérales","kind":"strength","sets":2,"reps":{"min":12,"max":15},"load_kg":8,"rest_s":60,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-05_S03","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-06","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30}}}},{"date":"2026-11-07","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-07_S04","title":"Bas du corps · volume","duration_min":52,"exercises":[{"id":"leg_press","name":"Presse à cuisses","kind":"strength","sets":4,"reps":{"min":10,"max":12},"load_kg":140,"rest_s":120,"target_rpe":8},{"id":"hip_thrust","name":"Hip thrust","kind":"strength","sets":4,"reps":{"min":8,"max":10},"load_kg":80,"rest_s":120,"target_rpe":8},{"id":"leg_curl","name":"Curl jambes","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":35,"rest_s":90,"target_rpe":8},{"id":"cable_crunch","name":"Crunch à la poulie","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":35,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-07_S04","title":"Bas du corps · allégé","duration_min":38,"exercises":[{"id":"leg_press","name":"Presse à cuisses","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":140,"rest_s":120,"target_rpe":8},{"id":"hip_thrust","name":"Hip thrust","kind":"strength","sets":3,"reps":{"min":8,"max":10},"load_kg":80,"rest_s":120,"target_rpe":8},{"id":"leg_curl","name":"Curl jambes","kind":"strength","sets":2,"reps":{"min":10,"max":12},"load_kg":35,"rest_s":90,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-07_S04","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-08","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30}}}},{"date":"2026-11-09","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-09_S05","title":"Haut du corps · force","duration_min":52,"exercises":[{"id":"bench_press","name":"Développé couché","kind":"strength","sets":4,"reps":{"min":5,"max":6},"load_kg":64.0,"rest_s":150,"target_rpe":8},{"id":"barbell_row","name":"Rowing barre","kind":"strength","sets":4,"reps":{"min":8,"max":8},"load_kg":56.5,"rest_s":120,"target_rpe":8},{"id":"overhead_press","name":"Développé militaire","kind":"strength","sets":3,"reps":{"min":6,"max":8},"load_kg":36.0,"rest_s":120,"target_rpe":8},{"id":"face_pull","name":"Face pull","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":20.5,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-09_S05","title":"Haut du corps · allégé","duration_min":38,"exercises":[{"id":"bench_press","name":"Développé couché","kind":"strength","sets":3,"reps":{"min":5,"max":6},"load_kg":64.0,"rest_s":150,"target_rpe":8},{"id":"barbell_row","name":"Rowing barre","kind":"strength","sets":3,"reps":{"min":8,"max":8},"load_kg":56.5,"rest_s":120,"target_rpe":8},{"id":"overhead_press","name":"Développé militaire","kind":"strength","sets":2,"reps":{"min":6,"max":8},"load_kg":36.0,"rest_s":120,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-09_S05","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-10","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-10_S06","title":"Bas du corps · force","duration_min":52,"exercises":[{"id":"squat","name":"Squat","kind":"strength","sets":4,"reps":{"min":5,"max":6},"load_kg":82.0,"rest_s":180,"target_rpe":8},{"id":"romanian_deadlift","name":"Soulevé de terre roumain","kind":"strength","sets":3,"reps":{"min":8,"max":8},"load_kg":92.0,"rest_s":150,"target_rpe":8},{"id":"walking_lunge","name":"Fente marchée","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":20.5,"rest_s":90,"target_rpe":8},{"id":"calf_raise","name":"Mollets debout","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":41.0,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-10_S06","title":"Bas du corps · allégé","duration_min":38,"exercises":[{"id":"squat","name":"Squat","kind":"strength","sets":3,"reps":{"min":5,"max":6},"load_kg":82.0,"rest_s":180,"target_rpe":8},{"id":"romanian_deadlift","name":"Soulevé de terre roumain","kind":"strength","sets":2,"reps":{"min":8,"max":8},"load_kg":92.0,"rest_s":150,"target_rpe":8},{"id":"walking_lunge","name":"Fente marchée","kind":"strength","sets":2,"reps":{"min":10,"max":12},"load_kg":20.5,"rest_s":90,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-10_S06","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-11","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30}}}},{"date":"2026-11-12","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-12_S07","title":"Haut du corps · volume","duration_min":52,"exercises":[{"id":"incline_press","name":"Développé incliné","kind":"strength","sets":4,"reps":{"min":8,"max":10},"load_kg":51.0,"rest_s":120,"target_rpe":8},{"id":"lat_pulldown","name":"Tirage vertical","kind":"strength","sets":4,"reps":{"min":10,"max":12},"load_kg":56.5,"rest_s":90,"target_rpe":8},{"id":"lateral_raise","name":"Élévations latérales","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":8.0,"rest_s":60,"target_rpe":8},{"id":"triceps_pushdown","name":"Extension triceps","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":25.5,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-12_S07","title":"Haut du corps · allégé","duration_min":38,"exercises":[{"id":"incline_press","name":"Développé incliné","kind":"strength","sets":3,"reps":{"min":8,"max":10},"load_kg":51.0,"rest_s":120,"target_rpe":8},{"id":"lat_pulldown","name":"Tirage vertical","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":56.5,"rest_s":90,"target_rpe":8},{"id":"lateral_raise","name":"Élévations latérales","kind":"strength","sets":2,"reps":{"min":12,"max":15},"load_kg":8.0,"rest_s":60,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-12_S07","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-13","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30}}}},{"date":"2026-11-14","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-14_S08","title":"Bas du corps · volume","duration_min":52,"exercises":[{"id":"leg_press","name":"Presse à cuisses","kind":"strength","sets":4,"reps":{"min":10,"max":12},"load_kg":143.5,"rest_s":120,"target_rpe":8},{"id":"hip_thrust","name":"Hip thrust","kind":"strength","sets":4,"reps":{"min":8,"max":10},"load_kg":82.0,"rest_s":120,"target_rpe":8},{"id":"leg_curl","name":"Curl jambes","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":36.0,"rest_s":90,"target_rpe":8},{"id":"cable_crunch","name":"Crunch à la poulie","kind":"strength","sets":3,"reps":{"min":12,"max":15},"load_kg":36.0,"rest_s":60,"target_rpe":8}]}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20},"sport":{"session_id":"2026-11-14_S08","title":"Bas du corps · allégé","duration_min":38,"exercises":[{"id":"leg_press","name":"Presse à cuisses","kind":"strength","sets":3,"reps":{"min":10,"max":12},"load_kg":143.5,"rest_s":120,"target_rpe":8},{"id":"hip_thrust","name":"Hip thrust","kind":"strength","sets":3,"reps":{"min":8,"max":10},"load_kg":82.0,"rest_s":120,"target_rpe":8},{"id":"leg_curl","name":"Curl jambes","kind":"strength","sets":2,"reps":{"min":10,"max":12},"load_kg":36.0,"rest_s":90,"target_rpe":8}]}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30},"sport":{"session_id":"2026-11-14_S08","title":"Mobilité · récupération","duration_min":20,"exercises":[{"id":"cat_cow","name":"Chat-vache","kind":"mobility","duration_s":120},{"id":"worlds_greatest_stretch","name":"Fente avec rotation","kind":"mobility","duration_s":180},{"id":"hip_90_90","name":"Mobilité hanches 90/90","kind":"mobility","duration_s":240},{"id":"thoracic_rotation","name":"Rotation thoracique","kind":"mobility","duration_s":180}]}}}},{"date":"2026-11-15","plans":{"A":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:45","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":90}],"reading":{"minutes":20}},"B":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:30","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":60}],"reading":{"minutes":20}},"C":{"nutrition":{"kcal_target":2160,"hydration_l":2.5,"meals":[{"id":"petit_dej","name":"Petit-déjeuner","time":"07:30","kcal":490,"protein_g":32,"carbs_g":58,"fat_g":14},{"id":"dejeuner","name":"Déjeuner","time":"12:30","kcal":660,"protein_g":48,"carbs_g":72,"fat_g":20},{"id":"collation","name":"Collation","time":"16:00","kcal":280,"protein_g":25,"carbs_g":24,"fat_g":9},{"id":"diner","name":"Dîner","time":"20:00","kcal":730,"protein_g":52,"carbs_g":80,"fat_g":22}]},"sleep":{"bedtime":"22:15","wake":"06:30"},"work_blocks":[{"start":"14:00","minutes":45}],"reading":{"minutes":30}}}}],"skeleton":[{"week":3,"volume_target":"élevé","deload":false,"load_progression_pct":2.5,"sessions":4},{"week":4,"volume_target":"bas","deload":true,"load_progression_pct":-10,"sessions":3},{"week":5,"volume_target":"modéré","deload":false,"load_progression_pct":2.5,"sessions":4},{"week":6,"volume_target":"élevé","deload":false,"load_progression_pct":2.5,"sessions":4},{"week":7,"volume_target":"élevé","deload":false,"load_progression_pct":2.5,"sessions":4},{"week":8,"volume_target":"bas","deload":true,"load_progression_pct":-10,"sessions":3},{"week":9,"volume_target":"modéré","deload":false,"load_progression_pct":2.5,"sessions":4},{"week":10,"volume_target":"élevé","deload":false,"load_progression_pct":2.5,"sessions":4},{"week":11,"volume_target":"élevé","deload":false,"load_progression_pct":2.5,"sessions":4},{"week":12,"volume_target":"bas","deload":true,"load_progression_pct":-10,"sessions":3}]}</script>
+<script type="application/json" id="sample">[{"schema":1,"entry_id":"2026-11-02_J01","programme_revision":1,"date":"2026-11-02","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-02_S01","status":"completed","sets":[{"exercise_id":"bench_press","set":1,"reps":5,"load_kg":62.5,"difficulty":0},{"exercise_id":"bench_press","set":2,"reps":5,"load_kg":62.5,"difficulty":0},{"exercise_id":"bench_press","set":3,"reps":5,"load_kg":62.5,"difficulty":0},{"exercise_id":"bench_press","set":4,"reps":5,"load_kg":62.5,"difficulty":0},{"exercise_id":"barbell_row","set":1,"reps":8,"load_kg":55.0,"difficulty":0},{"exercise_id":"barbell_row","set":2,"reps":8,"load_kg":55.0,"difficulty":0},{"exercise_id":"barbell_row","set":3,"reps":8,"load_kg":55.0,"difficulty":0},{"exercise_id":"barbell_row","set":4,"reps":8,"load_kg":55.0,"difficulty":0},{"exercise_id":"overhead_press","set":1,"reps":6,"load_kg":35.0,"difficulty":0},{"exercise_id":"overhead_press","set":2,"reps":6,"load_kg":35.0,"difficulty":0},{"exercise_id":"overhead_press","set":3,"reps":6,"load_kg":35.0,"difficulty":0},{"exercise_id":"face_pull","set":1,"reps":12,"load_kg":20.0,"difficulty":0},{"exercise_id":"face_pull","set":2,"reps":12,"load_kg":20.0,"difficulty":0},{"exercise_id":"face_pull","set":3,"reps":12,"load_kg":20.0,"difficulty":0}],"started_at":"2026-11-02T18:00:00+01:00","duration_min":45}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":90}},{"schema":1,"entry_id":"2026-11-03_J02","programme_revision":1,"date":"2026-11-03","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-03_S02","status":"completed","sets":[{"exercise_id":"squat","set":1,"reps":5,"load_kg":80.0,"difficulty":0},{"exercise_id":"squat","set":2,"reps":5,"load_kg":80.0,"difficulty":0},{"exercise_id":"squat","set":3,"reps":5,"load_kg":80.0,"difficulty":0},{"exercise_id":"squat","set":4,"reps":5,"load_kg":80.0,"difficulty":0},{"exercise_id":"romanian_deadlift","set":1,"reps":8,"load_kg":90.0,"difficulty":0},{"exercise_id":"romanian_deadlift","set":2,"reps":8,"load_kg":90.0,"difficulty":0},{"exercise_id":"romanian_deadlift","set":3,"reps":8,"load_kg":90.0,"difficulty":0},{"exercise_id":"walking_lunge","set":1,"reps":10,"load_kg":20.0,"difficulty":0},{"exercise_id":"walking_lunge","set":2,"reps":10,"load_kg":20.0,"difficulty":0},{"exercise_id":"walking_lunge","set":3,"reps":10,"load_kg":20.0,"difficulty":0},{"exercise_id":"calf_raise","set":1,"reps":12,"load_kg":40.0,"difficulty":0},{"exercise_id":"calf_raise","set":2,"reps":12,"load_kg":40.0,"difficulty":0},{"exercise_id":"calf_raise","set":3,"reps":12,"load_kg":40.0,"difficulty":0}],"started_at":"2026-11-03T18:00:00+01:00","duration_min":45}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":0,"work_min":60}},{"schema":1,"entry_id":"2026-11-04_J03","programme_revision":1,"date":"2026-11-04","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":0}},{"schema":1,"entry_id":"2026-11-05_J04","programme_revision":1,"date":"2026-11-05","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-05_S03","status":"completed","sets":[{"exercise_id":"incline_press","set":1,"reps":8,"load_kg":50.0,"difficulty":0},{"exercise_id":"incline_press","set":2,"reps":8,"load_kg":50.0,"difficulty":0},{"exercise_id":"incline_press","set":3,"reps":8,"load_kg":50.0,"difficulty":0},{"exercise_id":"incline_press","set":4,"reps":8,"load_kg":50.0,"difficulty":0},{"exercise_id":"lat_pulldown","set":1,"reps":10,"load_kg":55.0,"difficulty":0},{"exercise_id":"lat_pulldown","set":2,"reps":10,"load_kg":55.0,"difficulty":0},{"exercise_id":"lat_pulldown","set":3,"reps":10,"load_kg":55.0,"difficulty":0},{"exercise_id":"lat_pulldown","set":4,"reps":10,"load_kg":55.0,"difficulty":0},{"exercise_id":"lateral_raise","set":1,"reps":12,"load_kg":8.0,"difficulty":0},{"exercise_id":"lateral_raise","set":2,"reps":12,"load_kg":8.0,"difficulty":0},{"exercise_id":"lateral_raise","set":3,"reps":12,"load_kg":8.0,"difficulty":0},{"exercise_id":"triceps_pushdown","set":1,"reps":10,"load_kg":25.0,"difficulty":0},{"exercise_id":"triceps_pushdown","set":2,"reps":10,"load_kg":25.0,"difficulty":0},{"exercise_id":"triceps_pushdown","set":3,"reps":10,"load_kg":25.0,"difficulty":0}],"started_at":"2026-11-05T18:00:00+01:00","duration_min":45}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":75}},{"schema":1,"entry_id":"2026-11-06_J05","programme_revision":1,"date":"2026-11-06","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":15,"work_min":0}},{"schema":1,"entry_id":"2026-11-07_J06","programme_revision":1,"date":"2026-11-07","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-07_S04","status":"completed","sets":[{"exercise_id":"leg_press","set":1,"reps":10,"load_kg":140.0,"difficulty":0},{"exercise_id":"leg_press","set":2,"reps":10,"load_kg":140.0,"difficulty":0},{"exercise_id":"leg_press","set":3,"reps":10,"load_kg":140.0,"difficulty":0},{"exercise_id":"leg_press","set":4,"reps":10,"load_kg":140.0,"difficulty":0},{"exercise_id":"hip_thrust","set":1,"reps":8,"load_kg":80.0,"difficulty":0},{"exercise_id":"hip_thrust","set":2,"reps":8,"load_kg":80.0,"difficulty":0},{"exercise_id":"hip_thrust","set":3,"reps":8,"load_kg":80.0,"difficulty":0},{"exercise_id":"hip_thrust","set":4,"reps":8,"load_kg":80.0,"difficulty":0},{"exercise_id":"leg_curl","set":1,"reps":10,"load_kg":35.0,"difficulty":0},{"exercise_id":"leg_curl","set":2,"reps":10,"load_kg":35.0,"difficulty":0},{"exercise_id":"leg_curl","set":3,"reps":10,"load_kg":35.0,"difficulty":0},{"exercise_id":"cable_crunch","set":1,"reps":12,"load_kg":35.0,"difficulty":0},{"exercise_id":"cable_crunch","set":2,"reps":12,"load_kg":35.0,"difficulty":0},{"exercise_id":"cable_crunch","set":3,"reps":12,"load_kg":35.0,"difficulty":0}],"started_at":"2026-11-07T18:00:00+01:00","duration_min":45}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":45}},{"schema":1,"entry_id":"2026-11-08_J07","programme_revision":1,"date":"2026-11-08","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":0}},{"schema":1,"entry_id":"2026-11-09_J08","programme_revision":1,"date":"2026-11-09","morning":{"sleep_h":7.4,"energy":4,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-09_S05","status":"completed","sets":[{"exercise_id":"bench_press","set":1,"reps":5,"load_kg":64.0,"difficulty":-1},{"exercise_id":"bench_press","set":2,"reps":5,"load_kg":64.0,"difficulty":-1},{"exercise_id":"bench_press","set":3,"reps":5,"load_kg":64.0,"difficulty":-1},{"exercise_id":"bench_press","set":4,"reps":5,"load_kg":64.0,"difficulty":-1},{"exercise_id":"barbell_row","set":1,"reps":8,"load_kg":56.5,"difficulty":-1},{"exercise_id":"barbell_row","set":2,"reps":8,"load_kg":56.5,"difficulty":-1},{"exercise_id":"barbell_row","set":3,"reps":8,"load_kg":56.5,"difficulty":-1},{"exercise_id":"barbell_row","set":4,"reps":8,"load_kg":56.5,"difficulty":-1},{"exercise_id":"overhead_press","set":1,"reps":6,"load_kg":36.0,"difficulty":-1},{"exercise_id":"overhead_press","set":2,"reps":6,"load_kg":36.0,"difficulty":-1},{"exercise_id":"overhead_press","set":3,"reps":6,"load_kg":36.0,"difficulty":-1},{"exercise_id":"face_pull","set":1,"reps":12,"load_kg":20.5,"difficulty":-1},{"exercise_id":"face_pull","set":2,"reps":12,"load_kg":20.5,"difficulty":-1},{"exercise_id":"face_pull","set":3,"reps":12,"load_kg":20.5,"difficulty":-1}],"started_at":"2026-11-09T18:00:00+01:00","duration_min":45}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":90}},{"schema":1,"entry_id":"2026-11-10_J09","programme_revision":1,"date":"2026-11-10","morning":{"sleep_h":7.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-10_S06","status":"completed","sets":[{"exercise_id":"squat","set":1,"reps":5,"load_kg":82.0,"difficulty":0},{"exercise_id":"squat","set":2,"reps":5,"load_kg":82.0,"difficulty":0},{"exercise_id":"squat","set":3,"reps":5,"load_kg":82.0,"difficulty":0},{"exercise_id":"squat","set":4,"reps":5,"load_kg":82.0,"difficulty":0},{"exercise_id":"romanian_deadlift","set":1,"reps":8,"load_kg":92.0,"difficulty":0},{"exercise_id":"romanian_deadlift","set":2,"reps":8,"load_kg":92.0,"difficulty":0},{"exercise_id":"romanian_deadlift","set":3,"reps":8,"load_kg":92.0,"difficulty":0},{"exercise_id":"walking_lunge","set":1,"reps":10,"load_kg":20.5,"difficulty":0},{"exercise_id":"walking_lunge","set":2,"reps":10,"load_kg":20.5,"difficulty":0},{"exercise_id":"walking_lunge","set":3,"reps":10,"load_kg":20.5,"difficulty":0},{"exercise_id":"calf_raise","set":1,"reps":12,"load_kg":41.0,"difficulty":0},{"exercise_id":"calf_raise","set":2,"reps":12,"load_kg":41.0,"difficulty":0},{"exercise_id":"calf_raise","set":3,"reps":12,"load_kg":41.0,"difficulty":0}],"started_at":"2026-11-10T18:00:00+01:00","duration_min":45}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":60}},{"schema":1,"entry_id":"2026-11-11_J10","programme_revision":1,"date":"2026-11-11","morning":{"sleep_h":7.6,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":0,"work_min":0}},{"schema":1,"entry_id":"2026-11-12_J11","programme_revision":1,"date":"2026-11-12","morning":{"sleep_h":6.6,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-12_S07","status":"skipped","sets":[],"reason":"temps"}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":["travail prolongé"]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":50}},{"schema":1,"entry_id":"2026-11-13_J12","programme_revision":1,"date":"2026-11-13","morning":{"sleep_h":7.2,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":10,"work_min":0}},{"schema":1,"entry_id":"2026-11-14_J13","programme_revision":1,"date":"2026-11-14","morning":{"sleep_h":7.5,"energy":4,"pain":[],"plan_chosen":"A"},"sessions":[{"session_id":"2026-11-14_S08","status":"completed","sets":[{"exercise_id":"leg_press","set":1,"reps":10,"load_kg":143.5,"difficulty":-1},{"exercise_id":"leg_press","set":2,"reps":10,"load_kg":143.5,"difficulty":-1},{"exercise_id":"leg_press","set":3,"reps":10,"load_kg":143.5,"difficulty":-1},{"exercise_id":"leg_press","set":4,"reps":10,"load_kg":143.5,"difficulty":-1},{"exercise_id":"hip_thrust","set":1,"reps":8,"load_kg":82.0,"difficulty":-1},{"exercise_id":"hip_thrust","set":2,"reps":8,"load_kg":82.0,"difficulty":-1},{"exercise_id":"hip_thrust","set":3,"reps":8,"load_kg":82.0,"difficulty":-1},{"exercise_id":"hip_thrust","set":4,"reps":8,"load_kg":82.0,"difficulty":-1},{"exercise_id":"leg_curl","set":1,"reps":10,"load_kg":36.0,"difficulty":-1},{"exercise_id":"leg_curl","set":2,"reps":10,"load_kg":36.0,"difficulty":-1},{"exercise_id":"leg_curl","set":3,"reps":10,"load_kg":36.0,"difficulty":-1},{"exercise_id":"cable_crunch","set":1,"reps":12,"load_kg":36.0,"difficulty":-1},{"exercise_id":"cable_crunch","set":2,"reps":12,"load_kg":36.0,"difficulty":-1},{"exercise_id":"cable_crunch","set":3,"reps":12,"load_kg":36.0,"difficulty":-1}],"started_at":"2026-11-14T18:00:00+01:00","duration_min":45}],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":45}},{"schema":1,"entry_id":"2026-11-15_J14","programme_revision":1,"date":"2026-11-15","morning":{"sleep_h":8.0,"energy":3,"pain":[],"plan_chosen":"A"},"sessions":[],"evening":{"satisfaction":3,"fatigue":3,"disruptions":[]},"other":{"meals_done":4,"hydration_l":2.5,"reading_min":20,"work_min":0}}]</script>
+<script>window.XYSTOS_PWA=true</script>
+<script>
+(function(){
+var PROG=JSON.parse(document.getElementById('prog').textContent);
+try{var _p=JSON.parse(localStorage.getItem('xystos-prog')||'null');if(_p&&_p.schema===1&&Array.isArray(_p.days)&&_p.horizon&&_p.constraints)PROG=_p}catch(e){}
+var SAMPLE=JSON.parse(document.getElementById('sample').textContent);
+var P=function(p,s,w){return '<svg width="'+(s||22)+'" height="'+(s||22)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||1.4)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>'};
+var IC={
+ grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',
+ l:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+ sun:'<circle cx="12" cy="12" r="3.6"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>',
+ moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+ bar:'<path d="M6.5 6v12M3.5 9v6M17.5 6v12M20.5 9v6M6.5 12h11"/>',
+ smile:'<circle cx="12" cy="12" r="9"/><path d="M8.5 14c1 1.5 2.3 2.2 3.5 2.2s2.5-.7 3.5-2.2M9 9.5h.01M15 9.5h.01"/>',
+ batt:'<rect x="3" y="8" width="16" height="8" rx="2.5"/><path d="M21.5 11v2"/><path d="M6 11v2M9 11v2"/>',
+ warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+ pin:'<path d="M12 21s6-5.2 6-10a6 6 0 0 0-12 0c0 4.8 6 10 6 10z"/><circle cx="12" cy="11" r="2"/>',
+ play:'<path d="M8 5l11 7-11 7z"/>',pause:'<path d="M8 5v14M16 5v14"/>',r:'<path d="M5 12h14M13 6l6 6-6 6"/>'
+};
+function ic(n,s,w){return P(IC[n],s,w)}
+function f1(n){return String(n).replace('.',',')}
+function mmss(t){var m=Math.floor(t/60),s=t%60;return m+':'+(s<10?'0':'')+s}
+function fmtN(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
+function pad(n){return (n<10?'0':'')+n}
+function pd(s){var a=s.split('-');return new Date(+a[0],+a[1]-1,+a[2])}
+function iso(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function addD(s,n){var d=pd(s);d.setDate(d.getDate()+n);return iso(d)}
+function dayDiff(a,b){return Math.round((pd(b)-pd(a))/864e5)}
+var DN=['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'],MN=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+function fr(s){var d=pd(s);return DN[d.getDay()]+' '+d.getDate()+' '+MN[d.getMonth()]}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+function tzIso(date){var n=new Date(),o=-n.getTimezoneOffset(),sg=o>=0?'+':'-',a=Math.abs(o);return date+'T'+pad(n.getHours())+':'+pad(n.getMinutes())+':'+pad(n.getSeconds())+sg+pad(Math.floor(a/60))+':'+pad(a%60)}
+function dur(b,w){var x=(w.split(':')[0]*60+ +w.split(':')[1])-(b.split(':')[0]*60+ +b.split(':')[1]);if(x<0)x+=1440;return x}
+function hm(min){return Math.floor(min/60)+' h '+pad(min%60)}
+var gid=0;
+var SHORT={bench_press:'Couché',barbell_row:'Rowing',overhead_press:'Militaire',face_pull:'Face pull',squat:'Squat',romanian_deadlift:'Soulevé',walking_lunge:'Fentes',calf_raise:'Mollets',incline_press:'Incliné',lat_pulldown:'Tirage',lateral_raise:'Élévations',triceps_pushdown:'Triceps',leg_press:'Presse',hip_thrust:'Hip thrust',leg_curl:'Curl',cable_crunch:'Crunch',cat_cow:'Chat-vache',worlds_greatest_stretch:'Fente',hip_90_90:'Hanches',thoracic_rotation:'Thorax'};
+function shortName(e){return SHORT[e.id]||e.name.split(' ')[0]}
+
+var SC=['Aujourd\'hui','Séance','Nutrition','Travail','Lecture','Soir','Progression','Réglages'];
+var DEF=['lt','dk','lt','dk','dk','dk','dk','lt'];
+var I_JOUR=0,I_SEANCE=1,I_NUT=2,I_TRAV=3,I_LECT=4,I_SOIR=5,I_PROG=6,I_REG=7;
+function loadTh(){var t=DEF.slice();try{var s=JSON.parse(localStorage.getItem('xystos-th')||'null');if(s&&s.length===8)t=s}catch(e){}return t}
+function saveTh(t){try{localStorage.setItem('xystos-th',JSON.stringify(t))}catch(e){}}
+function loadHist(){try{var s=JSON.parse(localStorage.getItem('xystos-hist')||'[]');if(Array.isArray(s))return s}catch(e){}return []}
+function saveHist(h){try{localStorage.setItem('xystos-hist',JSON.stringify(h))}catch(e){}}
+
+function arcRing(sz,frac,sw,glow,noEnd){
+  var id='a'+(++gid),r=(sz-sw)/2-2,c=sz/2,C=2*Math.PI*r,f=Math.max(0.004,Math.min(1,frac)),L=(C*f).toFixed(1);
+  var a=f*2*Math.PI,ex=c+r*Math.sin(a),ey=c-r*Math.cos(a);
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 '+sz+' '+sz+'" aria-hidden="true" style="position:absolute;left:0;top:0;overflow:visible"><defs><linearGradient id="'+id+'" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color:var(--a2)"/><stop offset="1" style="stop-color:var(--acc)"/></linearGradient><filter id="b'+id+'" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6"/></filter></defs>'+
+  '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" style="stroke:var(--ring)" stroke-width="'+(sw*0.35)+'" stroke-dasharray="1 5" stroke-linecap="round"/>'+
+  (glow?'<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" style="stroke:var(--glow)" stroke-width="'+(sw+6)+'" stroke-linecap="round" stroke-dasharray="'+L+' '+C.toFixed(1)+'" transform="rotate(-90 '+c+' '+c+')" filter="url(#b'+id+')"/>':'')+
+  '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="url(#'+id+')" stroke-width="'+sw+'" stroke-linecap="round" stroke-dasharray="'+L+' '+C.toFixed(1)+'" transform="rotate(-90 '+c+' '+c+')"/>'+
+  (noEnd?'':'<circle cx="'+ex.toFixed(1)+'" cy="'+ey.toFixed(1)+'" r="'+(sw*0.9)+'" style="fill:var(--acc)" stroke="var(--bg)" stroke-width="2.5"/>')+'</svg>';
+}
+function orbit(cur){
+  var S=250,c=125,s='',R=114;
+  s+='<circle cx="'+c+'" cy="'+c+'" r="'+R+'" fill="none" style="stroke:var(--ring)" stroke-width="1" stroke-dasharray="1 5.4" stroke-linecap="round"/>';
+  for(var k=0;k<8;k++){var a=k*Math.PI/4,x=c+R*Math.sin(a),y=c-R*Math.cos(a);
+    if(k<cur)s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="6.5" style="fill:var(--tx2)"/>';
+    else if(k===cur)s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="9" style="fill:var(--acc)"/><circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="14" fill="none" style="stroke:var(--glow)" stroke-width="2"/>';
+    else s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="6" fill="none" style="stroke:var(--tx2)" stroke-width="1.3"/>';}
+  return '<svg width="'+S+'" height="'+S+'" viewBox="0 0 '+S+' '+S+'" aria-hidden="true" style="position:absolute;left:0;top:0">'+s+'</svg>';
+}
+function hexa(id){
+  var cx=140,cy=120,R=82,pts=[],pi=[];
+  for(var i=0;i<6;i++){var a=(-90+60*i)*Math.PI/180;pts.push((cx+R*Math.cos(a)).toFixed(1)+','+(cy+R*Math.sin(a)).toFixed(1));pi.push((cx+(R-26)*Math.cos(a)).toFixed(1)+','+(cy+(R-26)*Math.sin(a)).toFixed(1))}
+  return '<svg width="280" height="240" viewBox="0 0 280 240" aria-hidden="true" style="position:absolute;left:0;top:0;overflow:visible"><defs><filter id="'+id+'" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="-6" dy="-6" stdDeviation="7" style="flood-color:var(--hi)"/><feDropShadow dx="7" dy="7" stdDeviation="8" style="flood-color:var(--lo)"/></filter></defs>'+
+  '<polygon points="'+pts.join(' ')+'" style="fill:var(--bg);stroke:var(--bg)" stroke-width="22" stroke-linejoin="round" filter="url(#'+id+')"/>'+
+  '<polygon points="'+pi.join(' ')+'" style="fill:var(--in);stroke:var(--in)" stroke-width="16" stroke-linejoin="round"/></svg>';
+}
+function actbar(L,R,fr_,label){
+  function b(o,k){return '<div class="cb'+(k?' m':'')+'"><button class="rb" data-a="'+o.a+'" '+(o.v!==undefined?'data-v="'+o.v+'" ':'')+'aria-label="'+o.t+'">'+ic(o.i,k?30:26,k?1.7:1.4)+'</button><span>'+o.t+'</span></div>'}
+  var t=Math.max(0.02,Math.min(0.98,fr_)),p0=[4,64],p1=[120,-6],p2=[236,64],x=(1-t)*(1-t)*p0[0]+2*(1-t)*t*p1[0]+t*t*p2[0],y=(1-t)*(1-t)*p0[1]+2*(1-t)*t*p1[1]+t*t*p2[1];
+  var svg='<svg viewBox="0 0 240 80" aria-hidden="true"><path d="M4 64 Q120 -6 236 64" fill="none" style="stroke:var(--ring)" stroke-width="1.2"/><text x="120" y="22" text-anchor="middle" font-size="12" style="fill:var(--tx2)" font-family="Geist,system-ui,sans-serif">'+label+'</text><circle cx="'+x.toFixed(1)+'" cy="'+(y+6).toFixed(1)+'" r="4.5" style="fill:var(--acc)"/></svg>';
+  return '<div class="fade"></div><div class="act">'+(L?b(L,0):'<div></div>')+'<div class="arc">'+svg+'</div>'+(R?b(R,1):'<div></div>')+'</div>';
+}
+
+/* contrôles de l'app : reprennent les règles H1, H2, H4 et H11 du validateur */
+function check(e){
+  var m=[];function need(c,t){if(!c)m.push(t)}
+  ['schema','entry_id','programme_revision','date','morning','sessions','evening'].forEach(function(k){need(k in e,'champ absent : '+k)});
+  if(m.length)return m;
+  need(e.schema===1,'schema doit valoir 1');
+  need(/^\d{4}-\d{2}-\d{2}_J\d{2}$/.test(e.entry_id),'entry_id invalide');
+  need(e.entry_id.indexOf(e.date)===0,'H1 : entry_id ne commence pas par la date');
+  need(e.morning.sleep_h>=0&&e.morning.sleep_h<=14,'sommeil hors de 0-14 h');
+  need(e.morning.energy>=1&&e.morning.energy<=5,'énergie hors de 1-5');
+  need('ABC'.indexOf(e.morning.plan_chosen)>=0,'plan_chosen invalide');
+  need(e.evening.satisfaction>=1&&e.evening.satisfaction<=5&&e.evening.fatigue>=1&&e.evening.fatigue<=5,'bilan du soir hors de 1-5');
+  var day=null;PROG.days.forEach(function(d){if(d.date===e.date)day=d});
+  e.sessions.forEach(function(s){
+    need(['completed','partial','skipped','moved'].indexOf(s.status)>=0,'statut invalide');
+    if(s.status==='skipped'){need(!!s.reason,'H2 : annulée sans motif');need(!s.sets.length,'H2 : annulée avec des séries')}
+    else need(s.sets.length>0,'H2 : séance sans série');
+    var by={};s.sets.forEach(function(x){(by[x.exercise_id]=by[x.exercise_id]||[]).push(x.set)});
+    Object.keys(by).forEach(function(k){var n=by[k].slice().sort(function(a,b){return a-b});need(n.every(function(v,i){return v===i+1}),'H4 : numéros de série de '+k)});
+    if(day){var pl=day.plans[e.morning.plan_chosen].sport;need(pl&&pl.session_id===s.session_id,'H11 : séance absente du plan choisi');
+      if(pl)s.sets.forEach(function(x){need(pl.exercises.some(function(ex){return ex.id===x.exercise_id}),'H11 : exercice inconnu '+x.exercise_id)})}
+  });
+  return m;
+}
+
+function todayClamp(){var n=new Date(),t=n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());return t<PROG.horizon.start?PROG.horizon.start:t>PROG.detailed_until?PROG.detailed_until:t}
+function loadDs(){try{var o=JSON.parse(localStorage.getItem('xystos-ds')||'null');if(o&&typeof o==='object'){Object.keys(o).forEach(function(k){if(o[k].wk)o[k].wk.run=false;o[k].rdRun=false});return o}}catch(e){}return {}}
+function exportFiles(list){
+  if(!list.length)return;
+  var files=list.map(function(e){return new File([JSON.stringify(e,null,2)+'\n'],e.entry_id+'.json',{type:'application/json'})});
+  if(navigator.canShare&&navigator.canShare({files:files})){navigator.share({files:files,title:'Historique XYSTOS'}).catch(function(){});return}
+  files.forEach(function(f){var a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000)});
+}
+function Phone(root,onChange){
+  var S={scr:0,date:todayClamp(),menu:false,ph:'set',ex:0,kg:0,reps:0,t:0,tot:0,fb:'',tab:0,th:loadTh(),rest:150,keep:true,vib:true,demo:false,sample:true,pw:0,pt:0,lift:'bench_press',ds:loadDs(),hist:loadHist(),msg:'',jv:false,hv:false,hm:''},tm=null,ACT='';
+  function stop(){if(tm){clearInterval(tm);tm=null}}
+  function D(dt){dt=dt||S.date;if(!S.ds[dt])S.ds[dt]={m:null,msd:{sleep:7,energy:3,pain:[],lvl:3,plan:0,manual:false},sets:[],done:{},status:null,reason:null,started:null,t0:0,dur:0,meals:[],water:0,ev:{sat:3,fat:3,dis:[]},saved:false,entry:null,wk:{cut:0,i:0,t:null,run:false,sec:0,fin:false,post:false},rdBase:0,rdSec:0,rdRun:false};return S.ds[dt]}
+  function dayOf(dt){var r=null;PROG.days.forEach(function(d){if(d.date===dt)r=d});return r}
+  function pidx(){var d=D();return d.m?'ABC'.indexOf(d.m.plan_chosen):d.msd.plan}
+  function plan(){var d=dayOf(S.date);return d?d.plans['ABC'[pidx()]]:null}
+  function exs(){var p=plan();return p&&p.sport?p.sport.exercises:[]}
+  function total(e){return e.kind==='strength'?e.sets:1}
+  function exDone(e){return D().done[e.id]||0}
+  function curEx(){var a=exs();return a.length?a[Math.min(S.ex,a.length-1)]:null}
+  function allDone(){return exs().every(function(e){return exDone(e)>=total(e)})}
+  function pick(i){var a=exs(),e=a[i];S.ex=i;if(e&&e.kind==='strength'){S.kg=e.load_kg;S.reps=e.reps.min}}
+  function initEx(){var a=exs(),i=0;for(var k=0;k<a.length;k++){if(exDone(a[k])<total(a[k])){i=k;break}}pick(i)}
+  function nextEx(){var a=exs();for(var i=1;i<=a.length;i++){var j=(S.ex+i)%a.length;if(exDone(a[j])<total(a[j])){pick(j);return}}}
+  function mflags(){var p=plan(),n=p?p.nutrition.meals.length:0,d=D();while(d.meals.length<n)d.meals.push(0);return d.meals}
+  function tot(){var p=plan(),k=0,pr=0,c=0,f=0,fl=mflags();if(p)p.nutrition.meals.forEach(function(m,i){if(fl[i]){k+=m.kcal;pr+=m.protein_g;c+=m.carbs_g;f+=m.fat_g}});return{k:k,p:pr,c:c,f:f}}
+  function suggest(m){var pain=m.pain.length?m.lvl:0;if(pain>=5||(m.sleep<6&&m.energy<=2))return 2;if(m.sleep<6||m.energy<=2||pain>0)return 1;return 0}
+  function forme(){var d=D(),m=d.m;if(!m)return 0;var pain=m.pain.length?m.pain[0].level:0;return Math.max(20,Math.min(98,Math.round(30+m.energy*10+(m.sleep_h-5)*5-pain*4-(m.plan_chosen==='C'?6:0))))}
+  function doneOn(dt){var d=S.ds[dt];if(d&&(d.status==='completed'||d.status==='partial'))return true;return S.hist.some(function(h){return h.date===dt&&h.sessions.some(function(s){return s.status==='completed'||s.status==='partial'})})}
+  function weekInfo(){var w=Math.floor(dayDiff(PROG.horizon.start,S.date)/7)+1,pl=0,dn=0;PROG.days.forEach(function(d){if(Math.floor(dayDiff(PROG.horizon.start,d.date)/7)+1===w&&d.plans.A.sport){pl++;if(doneOn(d.date))dn++}});return{w:w,pl:pl,dn:dn}}
+  function stage(){var d=D(),fl=mflags(),a=[!!d.m,!!fl[0],!!fl[1],!!fl[2],d.status==='completed'||d.status==='partial'||d.status==='skipped',!!fl[3],d.saved];return a.filter(Boolean).length}
+
+  function header(sub){
+    return '<div class="hd"><div><h1>'+SC[S.scr]+'</h1><div class="sub">'+ic('pin',15,1.4)+sub+'</div></div><button class="rb rz mb" data-a="menu" aria-label="Changer d\'écran" aria-expanded="'+S.menu+'" style="border-radius:19px">'+ic('grid',22,1.4)+'</button>'+
+    (S.menu?'<div class="menu rz">'+SC.map(function(n,i){return '<button class="'+(i===S.scr?'on':'')+'" data-a="go" data-v="'+i+'">'+n+(i===S.scr?'<i></i>':'')+'</button>'}).join('')+'</div>':'')+'</div>';
+  }
+  function dsub(){var d=dayOf(S.date);return d?cap(fr(S.date))+' · semaine '+weekInfo().w:cap(fr(S.date))+' · hors programme'}
+  function rt(k,v,n){var h='<div class="rate">';for(var i=1;i<=(n||5);i++)h+='<button class="'+(v===i?'on':'')+'" data-a="'+k+'" data-v="'+i+'">'+i+'</button>';return h+'</div>'}
+  function stepc(l,v,u,k,d){return '<div class="rz sc"><span class="lbl">'+l+'</span><span class="v">'+v+'<em>'+u+'</em></span><div class="r"><button class="rb" data-a="adj" data-k="'+k+'" data-d="-'+d+'" aria-label="Moins">'+ic('minus',24,1.5)+'</button><button class="rb p" data-a="adj" data-k="'+k+'" data-d="'+d+'" aria-label="Plus">'+ic('plus',24,1.7)+'</button></div></div>'}
+  function emptyDay(t){ACT=actbar({a:'dd',i:'l',t:'Hier',v:-1},{a:'ddstart',i:'ok',t:'Début'},0.1,'Hors programme');return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="note">'+t+'</div></div>'}
+
+  /* ---------- Aujourd'hui ---------- */
+  function morning(){
+    var d=D(),m=d.msd,day=dayOf(S.date),p=day.plans['ABC'[m.plan]];
+    ACT=actbar({a:'plan',i:'minus',t:'Alléger'},{a:'mok',i:'ok',t:'Lancer'},0.2,'Plan '+'ABC'[m.plan]);
+    var zones=['épaule','dos','genou','poignet'];
+    var sp=p.sport?p.sport.title+' · '+p.sport.duration_min+' min':'Jour de repos';
+    return header(dsub())+
+    '<div class="lbl" style="margin:0 0 -8px 6px">Évaluation du matin</div>'+
+    '<div class="rz set"><div><b>Sommeil</b><span>Heures dormies</span></div><div class="rs"><button class="rb" data-a="sl" data-d="-0.5" aria-label="Moins">'+ic('minus',22,1.5)+'</button><span style="min-width:60px">'+f1(m.sleep.toFixed(1))+' h</span><button class="rb acc" data-a="sl" data-d="0.5" aria-label="Plus">'+ic('plus',22,1.7)+'</button></div></div>'+
+    '<div class="in" style="padding:16px;border-radius:28px"><div class="lbl" style="margin:0 0 12px 4px">Énergie</div>'+rt('en',m.energy)+'</div>'+
+    '<div class="in" style="padding:16px;border-radius:28px"><div class="lbl" style="margin:0 0 12px 4px">Douleur</div><div class="chips">'+zones.map(function(z){return '<button class="'+(m.pain.indexOf(z)>=0?'on':'')+'" data-a="pz" data-v="'+z+'">'+cap(z)+'</button>'}).join('')+'</div>'+
+    (m.pain.length?'<div class="chips" style="margin-top:12px">'+[['Légère',3],['Forte',6]].map(function(x){return '<button class="'+(m.lvl===x[1]?'on':'')+'" data-a="pl" data-v="'+x[1]+'">'+x[0]+'</button>'}).join('')+'</div>':'')+'</div>'+
+    '<div class="rz" style="padding:16px 20px;text-align:center"><div class="lbl">Plan proposé</div><div style="font-family:var(--serif);font-weight:800;font-size:24px;letter-spacing:.04em;margin:6px 0 4px">PLAN '+'ABC'[m.plan]+'</div><div class="lbl">'+sp+'</div></div>';
+  }
+  function home(){
+    var d=D(),day=dayOf(S.date);
+    if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
+    if(!d.m)return morning();
+    var p=plan(),wi=weekInfo(),cur=stage(),frac=cur/8,fo=forme(),sl=dur(p.sleep.bedtime,p.sleep.wake);
+    ACT=actbar({a:'plan',i:'minus',t:'Alléger'},{a:'go',v:p.sport?I_SEANCE:I_NUT,i:'ok',t:p.sport?'Commencer':'Repas'},frac,'Plan '+d.m.plan_chosen+' · étape '+cur+' / 8');
+    return header(dsub())+
+    '<div class="sw"><button data-a="dd" data-v="-1">Hier</button><button class="on" data-a="dd" data-v="0">'+DN[pd(S.date).getDay()]+'</button><button data-a="dd" data-v="1">Demain</button></div>'+
+    '<div class="wrap" style="width:250px;height:250px">'+orbit(cur)+arcRing(210,Math.max(0.004,frac),5,false,true).replace('style="position:absolute;left:0;top:0;overflow:visible"','style="position:absolute;left:20px;top:20px;overflow:visible"')+
+      '<div class="abs rb" style="left:125px;top:125px;width:146px;height:146px"><div class="in" style="width:116px;height:116px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center"><span class="acc">'+ic('sun',20,1.4)+'</span><span class="lbl" style="font-size:11px">Forme du jour</span><span style="font-size:30px;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums">'+fo+'<em class="u" style="font-size:13px;margin-left:2px">%</em></span></div></div></div>'+
+    '<div class="rz pill3"><div><b>'+hm(sl)+'</b><span>Sommeil cible</span></div><div><b>S'+wi.w+' / '+PROG.horizon.weeks+'</b><span>Semaine</span></div><div><b>'+wi.dn+' / '+wi.pl+'</b><span>Séances</span></div></div>'+
+    '<div class="rz duo"><div><span class="acc">'+ic('bar',22,1.3)+'</span><b>'+(p.sport?p.sport.duration_min+' min':'—')+'</b><span class="lbl">'+(p.sport?'Séance':'Repos')+'</span></div><div><span class="acc">'+ic('moon',22,1.3)+'</span><b>'+p.sleep.bedtime+'</b><span class="lbl">Coucher</span></div></div>';
+  }
+
+  /* ---------- Séance ---------- */
+  function workout(){
+    var d=D(),day=dayOf(S.date),p=plan();
+    if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
+    if(!d.m){ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:0,i:'ok',t:'Matin'},0.1,'Matin à faire');return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="note">Commence par l\'évaluation du matin : elle choisit le plan A, B ou C.</div></div>'}
+    if(!p.sport){ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:I_NUT,i:'ok',t:'Repas'},0.5,'Jour de repos');return header(dsub())+'<div class="rz" style="padding:30px 22px;text-align:center"><div class="hn" style="font-size:44px;font-weight:300">Repos</div><div class="note" style="margin-top:12px">Aucune séance prévue. La récupération fait partie du programme.</div></div>'}
+    if(d.status&&S.ph==='set')S.ph='fin';
+    var a=exs(),e=curEx(),dn=exDone(e),tt=total(e),n=Math.min(tt,dn+1);
+    if(S.ph==='reason'){
+      ACT=actbar({a:'back',i:'l',t:'Retour'},null,0.5,'Motif');
+      return header(p.sport.title)+'<div class="lbl" style="margin:0 0 -6px 6px">Pourquoi annuler ?</div>'+[['fatigue','Fatigue'],['temps','Manque de temps'],['douleur','Douleur'],['autre','Autre']].map(function(x){return '<button class="rz bt dif" data-a="reason" data-v="'+x[0]+'" style="height:72px"><div><b style="font-size:20px">'+x[1]+'</b></div></button>'}).join('');
+    }
+    if(S.ph==='fin'){
+      var st=d.status,fl=st==='completed'?'Séance terminée':st==='partial'?'Séance partielle':'Séance annulée',ns=d.sets.length;
+      ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:I_SOIR,i:'ok',t:'Bilan'},1,fl);
+      return header(p.sport.title)+'<div class="rz" style="padding:28px 22px;text-align:center"><div class="hn" style="font-size:60px">'+ns+'<em class="u" style="font-size:20px">série'+(ns>1?'s':'')+'</em></div><div class="lbl" style="margin:10px 0 14px">'+fl+(d.reason?' · '+d.reason:'')+'</div><div class="note">Enregistré sur l\'iPhone. Il part dans l\'historique quand tu valides le bilan du soir.</div></div>';
+    }
+    var tabs='<div class="tabs">'+a.map(function(x,i){return '<button class="'+(i===S.ex?'on':'')+'" data-a="pickex" data-v="'+i+'">'+shortName(x)+'</button>'}).join('')+'</div>';
+    if(S.ph==='diff'){
+      ACT=actbar({a:'back',i:'l',t:'Retour'},{a:'diff',v:1,i:'ok',t:'Bon'},0.5,'Série '+dn+' · '+f1(S.kg)+' × '+S.reps);
+      return header(e.name)+[['Facile','Encore 2 reps en réserve',''],['Bon','Dans la cible',' sg'],['Dur','Limite, la forme lâche','']].map(function(x,i){return '<button class="rz bt dif'+x[2]+'" data-a="diff" data-v="'+i+'"><div><b>'+x[0]+'</b><span>'+x[1]+'</span></div></button>'}).join('');
+    }
+    if(S.ph==='rest'){
+      ACT=actbar({a:'p30',i:'plus',t:'+ 30 s'},{a:'skip',i:'ok',t:'Prêt'},S.t/S.tot,'Repos · '+e.name);
+      return header(e.name)+'<div class="wrap" style="width:250px;height:250px;margin-top:6px"><div id="rg">'+arcRing(250,S.t/S.tot,10,true)+'</div><button class="abs rb" data-a="skip" aria-label="Passer le repos" style="left:125px;top:125px;width:178px;height:178px"><span class="in" style="width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span id="tm" class="hn" style="font-size:44px;font-weight:300">'+mmss(S.t)+'</span><span class="lbl">Passer</span></span></button></div>'+
+      '<div class="rz" style="padding:16px 20px;text-align:center"><div class="lbl">Prochaine série</div><div style="font-size:22px;font-weight:300;margin:6px 0 4px">'+f1(S.kg)+' kg × '+S.reps+'</div><div class="lbl">'+S.fb+'</div></div>';
+    }
+    /* phase 'set' */
+    var term='<div class="chips"><button data-a="finish">Terminer la séance</button></div>';
+    if(e.kind==='mobility'){
+      ACT=actbar({a:'nextex',i:'x',t:'Passer'},{a:'mdone',i:'ok',t:'Fait'},(a.filter(function(x){return exDone(x)>=total(x)}).length)/a.length,'Exercice '+(S.ex+1)+' / '+a.length);
+      return header(p.sport.title)+tabs+'<div class="rz" style="padding:34px 22px;text-align:center"><div class="lbl">'+e.name+'</div><div class="hn" style="font-size:72px;margin-top:10px">'+mmss(e.duration_s)+'</div><div class="note" style="margin-top:10px">'+(dn?'Déjà fait':'À faire')+'</div></div>'+term;
+    }
+    ACT=actbar({a:'nextex',i:'x',t:'Passer'},{a:'done',i:'ok',t:'Série faite'},n/tt,'Série '+n+' / '+tt);
+    var hid='h'+(++gid),pos=[[28,28],[252,28],[252,212],[28,212]],mk='',shown=Math.min(4,tt);
+    for(var i=0;i<shown;i++){var cl=i<dn?'done':i===dn?'cur':'todo';mk+='<div class="abs mk '+cl+'" style="left:'+pos[i][0]+'px;top:'+pos[i][1]+'px">'+(i<dn?ic('ok',20,1.8):(i+1))+'</div>'}
+    var rp=e.reps.min===e.reps.max?String(e.reps.min):e.reps.min+'–'+e.reps.max;
+    return header(p.sport.title)+tabs+
+    '<div class="wrap" style="width:280px;height:240px">'+hexa(hid)+mk+'<div class="abs" style="left:140px;top:120px;flex-direction:column;gap:4px;text-align:center"><span class="hn" style="font-size:54px">'+f1(e.load_kg)+'</span><span class="lbl">kg · cible '+rp+' reps</span></div></div>'+
+    '<div class="stepper">'+stepc('Charge',f1(S.kg),'kg','kg',2.5)+stepc('Répétitions',S.reps,'reps','reps',1)+'</div>'+term;
+  }
+
+  /* ---------- Nutrition ---------- */
+  function nut(){
+    var day=dayOf(S.date);if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
+    var p=plan(),n=p.nutrition,T=tot(),fr_=T.k/n.kcal_target,fl=mflags(),k=fl.filter(Boolean).length,wl=D().water*0.25;
+    ACT=actbar({a:'unmeal',i:'minus',t:'Annuler'},{a:'nextmeal',i:'ok',t:'Repas pris'},k/n.meals.length,k+' repas sur '+n.meals.length);
+    return header('Objectif '+fmtN(n.kcal_target)+' kcal')+
+    '<div class="wrap" style="width:250px;height:250px"><div>'+arcRing(250,Math.max(0.01,fr_),10,true)+'</div><button class="abs rb" data-a="nextmeal" aria-label="Valider le prochain repas" style="left:125px;top:125px;width:178px;height:178px"><span class="in" style="width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span class="hn" style="font-size:42px;font-weight:300">'+fmtN(T.k)+'</span><span class="lbl">kcal · '+Math.round(fr_*100)+' %</span></span></button></div>'+
+    '<div class="rz pill3"><div><b>'+T.p+' g</b><span>Protéines</span></div><div><b>'+T.c+' g</b><span>Glucides</span></div><div><b>'+T.f+' g</b><span>Lipides</span></div></div>'+
+    '<div class="in" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px 8px 22px;height:70px;border-radius:26px"><div><div style="font-size:15px;font-weight:500">Hydratation</div><div class="lbl">'+f1(wl)+' / '+f1(n.hydration_l)+' L</div></div><div style="display:flex;gap:10px"><button class="rb" style="width:52px;height:52px" data-a="adj" data-k="water" data-d="-1" aria-label="Moins">'+ic('minus',22,1.5)+'</button><button class="rb acc" style="width:52px;height:52px" data-a="adj" data-k="water" data-d="1" aria-label="Plus">'+ic('plus',22,1.7)+'</button></div></div>'+
+    n.meals.map(function(m,i){return '<button class="rz bt row" data-a="meal" data-v="'+i+'"><span class="nm"><b>'+m.name+'</b><span>'+m.time+' · P '+m.protein_g+' · G '+m.carbs_g+' · L '+m.fat_g+'</span></span><span class="kc">'+m.kcal+'</span><span class="ck'+(fl[i]?' on':'')+'">'+(fl[i]?ic('ok',22,1.8):'')+'</span></button>'}).join('');
+  }
+
+  /* ---------- Soir ---------- */
+  function buildEntry(){
+    var d=D(),day=dayOf(S.date),m=d.m,sp=day.plans.A.sport,idx=dayDiff(PROG.horizon.start,S.date)+1,sessions=[];
+    if(sp&&d.status){var s={session_id:sp.session_id,status:d.status,sets:d.sets.slice()};if(d.reason)s.reason=d.reason;if(d.started){s.started_at=d.started;s.duration_min=d.dur}sessions.push(s)}
+    var fl=mflags();
+    return {schema:1,entry_id:S.date+'_J'+pad(idx),programme_revision:PROG.revision,date:S.date,
+      morning:{sleep_h:m.sleep_h,energy:m.energy,pain:m.pain,plan_chosen:m.plan_chosen},
+      sessions:sessions,evening:{satisfaction:d.ev.sat,fatigue:d.ev.fat,disruptions:d.ev.dis.slice()},
+      other:{meals_done:fl.filter(Boolean).length,hydration_l:d.water*0.25,reading_min:d.rdBase+Math.floor(d.rdSec/60),work_min:Math.floor(d.wk.sec/60)}};
+  }
+  function night(){
+    var day=dayOf(S.date);if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
+    var d=D(),p=plan(),sl=dur(p.sleep.bedtime,p.sleep.wake);
+    if(d.saved){
+      var js=JSON.stringify(d.entry,null,2),msgs=check(d.entry);
+      ACT=actbar({a:'unsave',i:'l',t:'Modifier'},{a:'go',v:0,i:'ok',t:'Accueil'},1,'Journée enregistrée');
+      return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="acc" style="margin-bottom:8px">'+ic('ok',32,1.4)+'</div><div style="font-family:var(--serif);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase">Historique prêt</div><div class="lbl" style="margin-top:8px">'+d.entry.entry_id+'</div><div class="note" style="margin-top:8px">'+(msgs.length?'<span class="acc">Non conforme :</span><br>'+msgs.join('<br>'):'Conforme au contrat. Il sera déposé dans iCloud Drive au prochain passage.')+'</div></div>'+
+      '<div class="chips"><button data-a="jv">'+(S.jv?'Masquer le JSON':'Voir le JSON')+'</button><button data-a="copy" data-v="entry">Copier</button><button data-a="exp" data-v="entry">Exporter</button></div>'+(S.hm?'<div class="note">'+S.hm+'</div>':'')+(S.jv?'<pre class="js" id="jsv">'+js.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>':'');
+    }
+    var filled=(d.ev.sat?1:0)+(d.ev.fat?1:0)+Math.min(1,d.ev.dis.length);
+    ACT=actbar({a:'reset',i:'x',t:'Effacer'},{a:'save',i:'ok',t:'Enregistrer'},filled/3,'Bilan · '+filled+' / 3');
+    var D_=['travail prolongé','douleur','imprévu'];
+    var panel=S.tab===0?'<div class="lbl" style="margin:0 0 12px 4px">Satisfaction de la journée</div>'+rt('sat',d.ev.sat):S.tab===1?'<div class="lbl" style="margin:0 0 12px 4px">Fatigue ressentie</div>'+rt('fat',d.ev.fat):'<div class="lbl" style="margin:0 0 12px 4px">Perturbations</div><div class="chips">'+D_.map(function(x){return '<button class="'+(d.ev.dis.indexOf(x)>=0?'on':'')+'" data-a="dis" data-v="'+x+'">'+cap(x)+'</button>'}).join('')+'</div>';
+    var id='g'+(++gid),sf=Math.min(1,sl/540);
+    var ring='<svg width="250" height="250" viewBox="0 0 250 250" aria-hidden="true" style="position:absolute;left:0;top:0;overflow:visible"><defs><linearGradient id="'+id+'" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3C8CFF"/><stop offset=".55" stop-color="#A43FCB"/><stop offset="1" stop-color="#F0426E"/></linearGradient></defs><circle cx="125" cy="125" r="112" fill="none" style="stroke:var(--in)" stroke-width="16"/><circle cx="125" cy="125" r="112" fill="none" stroke="url(#'+id+')" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*112*sf).toFixed(1)+' 704" transform="rotate(-90 125 125)"/></svg>';
+    return header('Coucher '+p.sleep.bedtime+' · lever '+p.sleep.wake)+
+    '<div class="wrap" style="width:250px;height:250px">'+ring+'<div class="abs rb" style="left:125px;top:125px;width:176px;height:176px"><div class="in" style="width:138px;height:138px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span class="hn" style="font-size:40px;font-weight:300">'+hm(sl)+'</span><span class="lbl">de sommeil</span></div></div></div>'+
+    '<div class="modes">'+[['smile','Satisfaction'],['batt','Fatigue'],['warn','Perturbations']].map(function(x,i){return '<button class="'+(S.tab===i?'on':'')+'" data-a="tab" data-v="'+i+'" aria-label="'+x[1]+'">'+ic(x[0],26,1.4)+'</button>'}).join('')+'</div>'+
+    '<div class="in" style="padding:18px 16px;border-radius:28px">'+panel+'</div>'+(S.msg?'<div class="note acc">'+S.msg+'</div>':'');
+  }
+
+  /* ---------- Travail ---------- */
+  function wkSegs(){
+    var p=plan(),b=p&&p.work_blocks&&p.work_blocks[0];if(!b)return null;
+    var eff=Math.max(15,b.minutes-D().wk.cut),segs=[],left=eff;
+    while(left>=30){segs.push({ph:'focus',min:25},{ph:'pause',min:5});left-=30}
+    if(left>=5)segs.push({ph:'focus',min:left});else if(segs.length)segs.pop();
+    var foc=0;segs.forEach(function(s){if(s.ph==='focus')foc+=s.min});
+    return {b:b,eff:eff,segs:segs,foc:foc};
+  }
+  function wkAdvance(d,step){
+    var w=d.wk,sg=wkSegs();if(!sg||w.post)return;
+    var cur=sg.segs[w.i];if(!cur){w.run=false;w.fin=true;return}
+    if(w.t==null)w.t=cur.min*60;
+    var use=Math.min(step,w.t);w.t-=use;if(cur.ph==='focus')w.sec+=use;
+    if(w.t<=0){w.i++;var nx=sg.segs[w.i];if(!nx){w.run=false;w.fin=true;w.t=0}else w.t=nx.min*60}
+  }
+  function travail(){
+    var day=dayOf(S.date);if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
+    var d=D(),sg=wkSegs(),w=d.wk;
+    if(!d.m){ACT=actbar({a:'go',v:I_JOUR,i:'l',t:'Accueil'},{a:'go',v:I_JOUR,i:'ok',t:'Matin'},0.1,'Matin à faire');return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="note">Commence par l\'évaluation du matin : elle fixe le plan, donc la durée du bloc de travail.</div></div>'}
+    if(!sg){ACT=actbar({a:'go',v:I_JOUR,i:'l',t:'Accueil'},{a:'go',v:I_LECT,i:'ok',t:'Lecture'},0.5,'Pas de bloc');return header(dsub())+'<div class="rz" style="padding:30px 22px;text-align:center"><div class="hn" style="font-size:44px;font-weight:300">Libre</div><div class="note" style="margin-top:12px">Aucun bloc de travail prévu aujourd\'hui.</div></div>'}
+    if(w.post){ACT=actbar({a:'wback',i:'l',t:'Reprendre'},{a:'go',v:I_LECT,i:'ok',t:'Lecture'},0.5,'Reporté');return header('Bloc de '+sg.b.start)+'<div class="rz" style="padding:30px 22px;text-align:center"><div class="hn" style="font-size:44px;font-weight:300">Reporté</div><div class="note" style="margin-top:12px">Le bloc passe à demain. Le Mac en tiendra compte au prochain recalcul.</div></div>'}
+    var cur=sg.segs[Math.min(w.i,sg.segs.length-1)];
+    if(w.t==null&&!w.fin)w.t=cur.min*60;
+    var nSp=sg.segs.filter(function(s){return s.ph==='focus'}).length,sp=Math.min(nSp,sg.segs.slice(0,w.i+1).filter(function(s){return s.ph==='focus'}).length);
+    var frac=w.fin?0:w.t/(cur.min*60),mins=Math.floor(w.sec/60);
+    ACT=actbar({a:'wcut',i:'minus',t:'Raccourcir'},w.fin?{a:'go',v:I_LECT,i:'ok',t:'Lecture'}:{a:'wtog',i:w.run?'pause':'play',t:w.run?'Pause':(w.sec?'Reprendre':'Démarrer')},sg.foc?w.sec/60/sg.foc:0,'Bloc de '+sg.eff+' min');
+    var dots='<div class="dotsrow">';for(var i=0;i<nSp;i++)dots+='<i class="'+(i<sp-1||w.fin?'on':i===sp-1?'cu':'')+'"></i>';dots+='</div>';
+    return header(dsub())+
+    '<div class="wrap" style="width:250px;height:250px;margin-top:2px"><div id="wg">'+arcRing(250,Math.max(0.004,frac),10,w.run)+'</div><button class="abs rb" data-a="wtog" aria-label="Démarrer ou mettre en pause" style="left:125px;top:125px;width:178px;height:178px"><span class="in" style="width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span id="wt" class="hn" style="font-size:40px;font-weight:300">'+(w.fin?'Fini':mmss(w.t))+'</span><span id="wl" class="lbl">'+(w.fin?'bloc terminé':cur.ph==='focus'?'Concentration':'Pause')+'</span></span></button></div>'+
+    '<div class="rz" style="padding:16px 20px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="lbl">Sprint '+sp+' sur '+nSp+' · 25 min + 5 min</span><span id="ws" style="font-size:15px">'+mins+' <span class="tx2">/ '+sg.foc+' min</span></span></div><div style="margin-top:14px">'+dots+'</div></div>'+
+    '<div class="chips"><button data-a="wpost">Reporter à demain</button><button data-a="wcut">Raccourcir de 15 min</button></div>'+
+    '<div class="note">Bloc de '+sg.b.start+', '+sg.b.minutes+' min prévues'+(w.cut?' · raccourci de '+w.cut+' min':'')+'. Les minutes travaillées partent dans l\'historique.</div>';
+  }
+
+  /* ---------- Lecture ---------- */
+  function readMin(dt){var d=S.ds[dt];if(d&&(d.rdBase||d.rdSec))return d.rdBase+Math.floor(d.rdSec/60);var h=histOn(dt);return h&&h.other&&h.other.reading_min!==undefined?h.other.reading_min:null}
+  function histOn(dt){var r=null;S.hist.forEach(function(h){if(h.date===dt)r=h});if(!r&&S.sample)SAMPLE.forEach(function(h){if(h.date===dt)r=h});return r}
+  function lecture(){
+    var day=dayOf(S.date);if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
+    var d=D(),p=plan(),tgt=p.reading?p.reading.minutes:0,min=d.rdBase+Math.floor(d.rdSec/60),frac=tgt?Math.min(1,min/tgt):0;
+    var st=0;for(var k=0;k<60;k++){var dt=addD(S.date,-k),m=readMin(dt);if(k===0&&(m===null||m<tgt)){continue}if(m!==null&&m>=tgt)st++;else break}
+    var wd=(pd(S.date).getDay()+6)%7,monday=addD(S.date,-wd),row='<div class="dotsrow" style="gap:12px">';
+    for(var i=0;i<7;i++){var dd=addD(monday,i),m2=dd===S.date?min:readMin(dd),t2=(dayOf(dd)&&dayOf(dd).plans.A.reading)?dayOf(dd).plans.A.reading.minutes:20;
+      row+='<div style="display:flex;flex-direction:column;align-items:center;gap:8px"><i style="width:22px;height:22px;border-radius:50%;display:block;'+(m2!==null&&m2>=t2?'background:var(--acc);box-shadow:0 0 10px var(--glow)':m2?'border:1.5px solid var(--acc)':'border:1.5px solid var(--ring)')+(dd===S.date?';outline:2px solid var(--tx2);outline-offset:3px':'')+'"></i><span class="lbl" style="font-size:11px">'+['L','M','M','J','V','S','D'][i]+'</span></div>'}
+    row+='</div>';
+    ACT=actbar({a:'go',v:I_JOUR,i:'l',t:'Accueil'},{a:'rtog',i:d.rdRun?'pause':'play',t:d.rdRun?'Pause':'Lire'},frac,min+' / '+tgt+' min');
+    return header(dsub())+
+    '<div class="wrap" style="width:250px;height:250px;margin-top:2px"><div id="rg2">'+arcRing(250,Math.max(0.004,frac),10,d.rdRun)+'</div><button class="abs rb" data-a="rtog" aria-label="Lancer ou arrêter la lecture" style="left:125px;top:125px;width:178px;height:178px"><span class="in" style="width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span id="rt" class="hn" style="font-size:46px;font-weight:300">'+min+'</span><span id="rl" class="lbl">sur '+tgt+' min</span></span></button></div>'+
+    '<div class="stepper">'+
+      '<div class="rz sc"><span class="lbl">Minutes lues</span><span class="v" id="rv">'+min+'<em>min</em></span><div class="r"><button class="rb" data-a="radj" data-d="-5" aria-label="Moins 5 minutes">'+ic('minus',24,1.5)+'</button><button class="rb p" data-a="radj" data-d="5" aria-label="Plus 5 minutes">'+ic('plus',24,1.7)+'</button></div></div>'+
+      '<div class="rz sc" style="justify-content:center"><span class="lbl">Série en cours</span><span class="v">'+st+'<em>jour'+(st>1?'s':'')+'</em></span><span class="lbl" style="text-align:center">objectif de '+tgt+' min par jour</span></div></div>'+
+    '<div class="rz" style="padding:16px 18px"><div class="lbl" style="margin-bottom:14px">Cette semaine</div>'+row+'</div>';
+  }
+
+  /* ---------- Progression ---------- */
+  function histList(){var m={};if(S.sample)SAMPLE.forEach(function(h){m[h.date]=h});S.hist.forEach(function(h){m[h.date]=h});return Object.keys(m).sort().map(function(k){return m[k]})}
+  function weekOf(dt){return Math.floor(dayDiff(PROG.horizon.start,dt)/7)+1}
+  var LIFTS=[['bench_press','Couché'],['squat','Squat'],['barbell_row','Rowing'],['overhead_press','Militaire']];
+  function loadPlan(id){
+    var arr=[],hard=null,W=PROG.horizon.weeks;
+    for(var w=1;w<=W;w++){
+      var found=null,dl=false;
+      PROG.days.forEach(function(x){if(weekOf(x.date)===w){if(x.deload)dl=true;((x.plans.A.sport||{}).exercises||[]).forEach(function(e){if(e.id===id&&e.kind==='strength')found=e.load_kg})}});
+      if(found!==null){arr[w]={v:found,proj:false};if(!dl)hard=found;continue}
+      var sk=PROG.skeleton.filter(function(s){return s.week===w})[0];
+      if(hard===null||!sk){arr[w]=null;continue}
+      if(sk.deload)arr[w]={v:Math.round(hard*0.9*2)/2,proj:true};
+      else{hard=Math.round(hard*(1+sk.load_progression_pct/100)*2)/2;arr[w]={v:hard,proj:true}}
+    }
+    return arr;
+  }
+  function progression(){
+    var W=PROG.horizon.weeks,cw=Math.min(W,Math.max(1,weekOf(S.date))),sel=S.pw||cw,H=histList(),hw={};
+    H.forEach(function(h){(hw[weekOf(h.date)]=hw[weekOf(h.date)]||[]).push(h)});
+    ACT=actbar({a:'pwk',v:-1,i:'l',t:'Précédente'},{a:'pwk',v:1,i:'r',t:'Suivante'},sel/W,'Semaine '+sel+' sur '+W);
+    var tabs='<div class="tabs">'+['Régularité','Charges','Sommeil'].map(function(n,i){return '<button class="'+(S.pt===i?'on':'')+'" data-a="ptab" data-v="'+i+'">'+n+'</button>'}).join('')+'</div>';
+    var chart='',info='',chips='';
+    if(S.pt===0){
+      var mx=5,cols='',tp=0,td=0;
+      for(var w=1;w<=W;w++){
+        var pl=0;PROG.days.forEach(function(x){if(weekOf(x.date)===w&&x.plans.A.sport)pl++});
+        if(!pl){var sk=PROG.skeleton.filter(function(s){return s.week===w})[0];pl=sk?sk.sessions:0}
+        var dn=0;(hw[w]||[]).forEach(function(h){h.sessions.forEach(function(s){if(s.status==='completed'||s.status==='partial')dn++})});
+        if(w<=cw){tp+=pl;td+=dn}
+        cols+='<button class="'+(sel===w?'sel':'')+'" data-a="pw" data-v="'+w+'" aria-label="Semaine '+w+'"><i class="proj" style="height:'+Math.round(pl/mx*100)+'%;position:absolute;bottom:22px;left:0;right:0"></i><i style="height:'+Math.round(dn/mx*100)+'%;position:absolute;bottom:22px;left:0;right:0;background:var(--acc);box-shadow:0 0 10px var(--glow)"></i><b style="position:absolute;bottom:0">S'+w+'</b></button>';
+        if(w===sel)info='S'+w+' · '+dn+' séance'+(dn>1?'s':'')+' faite'+(dn>1?'s':'')+' sur '+pl+' prévue'+(pl>1?'s':'');
+      }
+      chart='<div class="b12">'+cols+'</div>';
+      chips='<div class="note">Réalisation depuis le début : <b style="color:var(--tx);font-weight:500">'+(tp?Math.round(td/tp*100):0)+' %</b> ('+td+' séances sur '+tp+').</div>';
+    }else if(S.pt===1){
+      var plan_=loadPlan(S.lift),mxL=0,cols2='';
+      plan_.forEach(function(x){if(x&&x.v>mxL)mxL=x.v});
+      for(var w2=1;w2<=W;w2++){
+        var x=plan_[w2],act=0;(hw[w2]||[]).forEach(function(h){h.sessions.forEach(function(s){s.sets.forEach(function(t){if(t.exercise_id===S.lift&&t.load_kg>act)act=t.load_kg})})});
+        cols2+='<button class="'+(sel===w2?'sel':'')+'" data-a="pw" data-v="'+w2+'" aria-label="Semaine '+w2+'">'+(x?'<i class="'+(x.proj?'proj':'')+'" style="height:'+Math.round(x.v/mxL*100)+'%;position:absolute;bottom:22px;left:0;right:0"></i>':'')+(act?'<i style="height:'+Math.round(act/mxL*100)+'%;position:absolute;bottom:22px;left:0;right:0;background:var(--acc);box-shadow:0 0 10px var(--glow)"></i>':'')+'<b style="position:absolute;bottom:0">S'+w2+'</b></button>';
+        if(w2===sel)info='S'+w2+' · '+(x?f1(x.v)+' kg '+(x.proj?'projetés':'prévus'):'—')+(act?' · '+f1(act)+' kg soulevés':'');
+      }
+      chart='<div class="b12">'+cols2+'</div>';
+      chips='<div class="chips" style="margin-top:4px">'+LIFTS.map(function(l){return '<button class="'+(S.lift===l[0]?'on':'')+'" data-a="lift" data-v="'+l[0]+'">'+l[1]+'</button>'}).join('')+'</div>';
+    }else{
+      var cols3='',tg=dur(plan().sleep.bedtime,plan().sleep.wake)/60;
+      for(var w3=1;w3<=W;w3++){
+        var xs=(hw[w3]||[]).map(function(h){return h.morning.sleep_h}),av=xs.length?xs.reduce(function(a,b){return a+b},0)/xs.length:0;
+        cols3+='<button class="'+(sel===w3?'sel':'')+'" data-a="pw" data-v="'+w3+'" aria-label="Semaine '+w3+'">'+(av?'<i style="height:'+Math.round(av/9*100)+'%;position:absolute;bottom:22px;left:0;right:0;'+(av<tg-0.75?'background:var(--acc);box-shadow:0 0 10px var(--glow)':'')+'"></i>':'')+'<b style="position:absolute;bottom:0">S'+w3+'</b></button>';
+        if(w3===sel)info='S'+w3+' · '+(av?f1(av.toFixed(1))+' h en moyenne':'pas de données');
+      }
+      chart='<div class="b12"><u style="position:absolute;left:0;right:0;bottom:calc(22px + '+(tg/9*100).toFixed(1)+'% * 0.8);height:0;border-top:1.5px dashed var(--tx2);opacity:.6"></u>'+cols3+'</div>';
+      chips='<div class="note">Ligne pointillée : sommeil cible de '+f1(tg.toFixed(2))+' h. Orange : moyenne nettement sous la cible.</div>';
+    }
+    var pr=Math.round(cw/W*100);
+    return header('Semaine '+cw+' sur '+W)+
+    '<div class="rz" style="padding:18px 22px;display:flex;align-items:center;gap:18px"><div class="wrap" style="width:96px;height:96px;margin:0;flex:none">'+arcRing(96,Math.max(0.02,cw/W),8,false,true)+'<div class="abs" style="left:48px;top:48px;font-weight:300;font-size:26px;letter-spacing:-.02em">S'+cw+'</div></div><div><div class="hn" style="font-size:34px">'+pr+'<em class="u" style="font-size:15px">% du cycle</em></div><div class="lbl" style="margin-top:6px">'+PROG.horizon.start+' → '+PROG.horizon.end+'</div></div></div>'+
+    tabs+(S.pt===1?chips:'')+'<div class="in" style="padding:16px 12px 14px;border-radius:26px">'+chart+'<div style="text-align:center;font-size:14px;margin-top:12px">'+info+'</div></div>'+(S.pt===1?'':chips);
+  }
+
+  /* ---------- Réglages ---------- */
+  function settings(){
+    ACT=actbar({a:'go',v:0,i:'l',t:'Retour'},{a:'go',v:0,i:'ok',t:'Terminé'},0.5,'Réglages');
+    var rows=[0,1,2,3,4,5,6].map(function(i){return '<div class="rz set"><div><b>'+SC[i]+'</b><span>'+(S.th[i]===DEF[i]?'Par défaut':'Modifié')+'</span></div><div class="seg in">'+['lt','dk'].map(function(m){return '<button class="'+(S.th[i]===m?'on':'')+'" data-a="th" data-k="'+i+'" data-v="'+m+'">'+(m==='lt'?'Clair':'Sombre')+'</button>'}).join('')+'</div></div>'}).join('');
+    function tog(k,l,s,on){return '<button class="rz bt set" data-a="tog" data-k="'+k+'" role="switch" aria-checked="'+on+'"><div><b>'+l+'</b><span>'+s+'</span></div><span class="swt'+(on?' on':'')+'"><i></i></span></button>'}
+    var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    return header('Préférences')+
+    '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
+    '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
+    '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
+    '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
+    '<div class="lbl" style="margin:6px 0 -6px 6px">Historique</div>'+
+    '<div class="rz set"><div><b>'+S.hist.length+' journée'+(S.hist.length>1?'s':'')+' enregistrée'+(S.hist.length>1?'s':'')+'</b><span>Prêtes pour le prochain passage dans iCloud</span></div></div>'+
+    '<div class="chips"><button data-a="hv">'+(S.hv?'Masquer':'Voir le JSON')+'</button><button data-a="exp" data-v="all">Exporter tout</button><button data-a="copy" data-v="all">Tout copier</button><button data-a="hclear">Vider</button></div>'+(S.hv?'<pre class="js" id="jsv">'+hs+'</pre>':'')+
+    '<div class="lbl" style="margin:6px 0 -6px 6px">Apparence par écran</div>'+rows+
+    '<div class="chips"><button data-a="threset">Rétablir les réglages par défaut</button></div>'+
+    '<div class="lbl" style="margin:6px 0 -6px 6px">En salle</div>'+
+    tog('keep','Écran allumé','Pendant la séance, le travail et la lecture',S.keep)+
+    tog('vib','Vibration','Indisponible sur iPhone en application web',S.vib)+
+    tog('demo','Minuteurs accélérés','Démo : 1 s compte pour 1 min',S.demo)+
+    tog('sample','Historique d\'exemple','Deux semaines dans Progression et Lecture',S.sample)+
+    '<div class="rz set"><div><b>Repos par défaut</b><span>Repli si le programme n\'en fixe pas</span></div><div class="rs"><button class="rb" data-a="rest" data-d="-15" aria-label="Moins">'+ic('minus',22,1.5)+'</button><span>'+mmss(S.rest)+'</span><button class="rb acc" data-a="rest" data-d="15" aria-label="Plus">'+ic('plus',22,1.7)+'</button></div></div>';
+  }
+
+  var wl=null;
+  function saveDs(){try{localStorage.setItem('xystos-ds',JSON.stringify(S.ds))}catch(e){}}
+  function keepAwake(){
+    var want=S.keep&&(S.scr===I_SEANCE||S.scr===I_TRAV||S.scr===I_LECT);
+    try{
+      if(want&&!wl&&navigator.wakeLock){navigator.wakeLock.request('screen').then(function(l){wl=l;l.addEventListener('release',function(){wl=null})}).catch(function(){})}
+      else if(!want&&wl){wl.release();wl=null}
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')keepAwake()});
+  function render(){
+    var old=root.querySelector('.scr'),sc=old?old.scrollTop:0;
+    root.className='dev '+S.th[S.scr];
+    var body=[home,workout,nut,travail,lecture,night,progression,settings][S.scr]();
+    root.innerHTML='<div class="isl"></div><div class="stat"><span>9:41</span><span><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none" aria-hidden="true"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".55"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/></svg></span></div><div class="scr">'+body+'</div>'+ACT+'<div class="hi"></div>';
+    var nw=root.querySelector('.scr');if(nw)nw.scrollTop=sc;
+    saveDs();keepAwake();
+    if(onChange)onChange(S.scr,S.th[S.scr],S.date);
+  }
+  var tk=null;
+  function ensureTk(){var any=Object.keys(S.ds).some(function(k){return S.ds[k].wk.run||S.ds[k].rdRun});if(any&&!tk)tk=setInterval(tickAll,1000);if(!any&&tk){clearInterval(tk);tk=null}}
+  function tickAll(){var step=S.demo?60:1;Object.keys(S.ds).forEach(function(k){var d=S.ds[k];if(d.wk.run)wkAdvance(d,step);if(d.rdRun)d.rdSec+=step});updTimers();ensureTk()}
+  function updTimers(){
+    var d=D();
+    if(S.scr===I_TRAV){
+      var sg=wkSegs(),w=d.wk;if(!sg)return;
+      if(w.fin||S._wi!==w.i){S._wi=w.i;render();return}
+      var cur=sg.segs[Math.min(w.i,sg.segs.length-1)],t=root.querySelector('#wt'),l=root.querySelector('#wl'),g=root.querySelector('#wg'),sx=root.querySelector('#ws');
+      if(t&&w.t!=null)t.textContent=mmss(w.t);if(l)l.textContent=cur.ph==='focus'?'Concentration':'Pause';
+      if(g)g.innerHTML=arcRing(250,Math.max(0.004,w.t/(cur.min*60)),10,w.run);
+      if(sx)sx.innerHTML=Math.floor(w.sec/60)+' <span class="tx2">/ '+sg.foc+' min</span>';
+    }else if(S.scr===I_LECT){
+      var p=plan(),tgt=p&&p.reading?p.reading.minutes:0,min=d.rdBase+Math.floor(d.rdSec/60),rt=root.querySelector('#rt'),rv=root.querySelector('#rv'),rg=root.querySelector('#rg2');
+      if(rt)rt.textContent=min;if(rv)rv.innerHTML=min+'<em>min</em>';if(rg)rg.innerHTML=arcRing(250,Math.max(0.004,tgt?Math.min(1,min/tgt):0),10,d.rdRun);
+    }
+  }
+  function upd(){var a=root.querySelector('#tm'),r=root.querySelector('#rg');if(a)a.textContent=mmss(S.t);if(r)r.innerHTML=arcRing(250,S.t/S.tot,10,true)}
+  function go(n){stop();if(S.ph==='rest')S.ph='set';S.menu=false;S.scr=n;S.msg='';if(n===1&&exs().length)initEx();render()}
+  function startRest(e){S.ph='rest';S.t=e.rest_s||S.rest;S.tot=S.t;render();stop();tm=setInterval(function(){S.t--;if(S.t<=0){nextAfterRest();return}upd()},1000)}
+  function nextAfterRest(){stop();var e=curEx();if(e&&exDone(e)>=total(e))nextEx();S.ph='set';render()}
+  function finishSession(st,reason){var d=D();d.status=st;if(reason)d.reason=reason;if(d.started)d.dur=Math.max(1,Math.round((Date.now()-d.t0)/60000));S.ph='fin';render()}
+  function begin(){var d=D();if(!d.started){d.started=tzIso(S.date);d.t0=Date.now()}}
+  function setDate(dt){stop();Object.keys(S.ds).forEach(function(k){S.ds[k].wk.run=false;S.ds[k].rdRun=false});ensureTk();S.pw=0;S._wi=undefined;S.date=dt;S.ph='set';S.msg='';S.jv=false;initEx();render()}
+  function copy(txt){
+    function ok(){S.hm='Copié dans le presse-papiers.';render()}
+    function fb(){var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();var r=false;try{r=document.execCommand('copy')}catch(e){}document.body.removeChild(ta);S.hm=r?'Copié dans le presse-papiers.':'Copie refusée : sélectionne le texte du JSON.';render()}
+    try{navigator.clipboard.writeText(txt).then(ok,fb)}catch(e){fb()}
+  }
+
+  root.addEventListener('change',function(e){
+    if(e.target.id!=='pf'||!e.target.files[0])return;
+    var rd=new FileReader();
+    rd.onload=function(){try{var o=JSON.parse(rd.result);if(o.schema!==1||!Array.isArray(o.days)||!o.horizon||!o.constraints)throw 0;PROG=o;try{localStorage.setItem('xystos-prog',JSON.stringify(o))}catch(e){}S.ds={};S.date=o.horizon.start;S.hm='Programme importé · révision '+o.revision+'.'}catch(x){S.hm='Fichier non reconnu : ce n\'est pas un programme.json valide.'}render()};
+    rd.readAsText(e.target.files[0]);
+  });
+  root.addEventListener('click',function(e){
+    var b=e.target.closest('[data-a]');
+    if(!b||!root.contains(b)){if(S.menu){S.menu=false;render()}return}
+    var a=b.getAttribute('data-a'),v=b.getAttribute('data-v'),k=b.getAttribute('data-k'),dd=parseFloat(b.getAttribute('data-d')),d=D();
+    if(a==='menu'){S.menu=!S.menu;render();return}
+    if(a==='go'){go(+v);return}
+    if(a==='wtog'){var sg0=wkSegs();if(!sg0||d.wk.fin||d.wk.post)return;d.wk.run=!d.wk.run;S._wi=d.wk.i;ensureTk();render();return}
+    if(a==='wcut'){d.wk.cut=Math.min(60,d.wk.cut+15);var sg1=wkSegs();if(sg1&&d.wk.i>=sg1.segs.length){d.wk.i=sg1.segs.length-1;d.wk.t=Math.min(d.wk.t==null?1e9:d.wk.t,sg1.segs[d.wk.i].min*60)}render();return}
+    if(a==='wpost'){d.wk.post=true;d.wk.run=false;ensureTk();render();return}
+    if(a==='wback'){d.wk.post=false;render();return}
+    if(a==='rtog'){d.rdRun=!d.rdRun;ensureTk();render();return}
+    if(a==='radj'){d.rdBase=Math.max(0,d.rdBase+dd);render();return}
+    if(a==='pw'){S.pw=+v;render();return}
+    if(a==='pwk'){S.pw=Math.max(1,Math.min(PROG.horizon.weeks,(S.pw||Math.max(1,weekOf(S.date)))+(+v)));render();return}
+    if(a==='ptab'){S.pt=+v;render();return}
+    if(a==='lift'){S.lift=v;render();return}
+    if(a==='ddstart'){setDate(PROG.horizon.start);return}
+    if(a==='dd'){var t=addD(S.date,+v);if(t<PROG.horizon.start)t=PROG.horizon.start;if(t>PROG.detailed_until)t=PROG.detailed_until;setDate(t);return}
+    if(a==='plan'){if(d.m){d.m.plan_chosen='ABC'[(pidx()+1)%3];initEx()}else{d.msd.plan=(d.msd.plan+1)%3;d.msd.manual=true}render();return}
+    if(a==='sl'||(a==='adj'&&k==='sl')){d.msd.sleep=Math.max(3,Math.min(12,d.msd.sleep+dd));if(!d.msd.manual)d.msd.plan=suggest(d.msd);render();return}
+    if(a==='en'){d.msd.energy=+v;if(!d.msd.manual)d.msd.plan=suggest(d.msd);render();return}
+    if(a==='pz'){var i=d.msd.pain.indexOf(v);if(i<0)d.msd.pain.push(v);else d.msd.pain.splice(i,1);if(!d.msd.manual)d.msd.plan=suggest(d.msd);render();return}
+    if(a==='pl'){d.msd.lvl=+v;if(!d.msd.manual)d.msd.plan=suggest(d.msd);render();return}
+    if(a==='mok'){var m=d.msd;d.m={sleep_h:m.sleep,energy:m.energy,pain:m.pain.map(function(z){return{zone:z,level:m.lvl}}),plan_chosen:'ABC'[m.plan]};initEx();render();return}
+    if(a==='adj'){if(k==='kg')S.kg=Math.max(0,Math.round((S.kg+dd)*10)/10);else if(k==='reps')S.reps=Math.max(0,S.reps+dd);else d.water=Math.max(0,Math.min(24,d.water+dd));render();return}
+    if(a==='th'){S.th[+k]=v;saveTh(S.th);render();return}
+    if(a==='threset'){S.th=DEF.slice();saveTh(S.th);render();return}
+    if(a==='tog'){S[k]=!S[k];render();return}
+    if(a==='rest'){S.rest=Math.max(30,Math.min(300,S.rest+dd));render();return}
+    if(a==='import'){var f=root.querySelector('#pf');if(f)f.click();return}
+    if(a==='hv'){S.hv=!S.hv;S.hm='';render();return}
+    if(a==='jv'){S.jv=!S.jv;S.hm='';render();return}
+    if(a==='hclear'){S.hist=[];saveHist(S.hist);S.hm='';render();return}
+    if(a==='exp'){exportFiles(v==='all'?S.hist:[d.entry]);return}
+    if(a==='copy'){copy(v==='all'?JSON.stringify(S.hist,null,2):JSON.stringify(d.entry,null,2));return}
+    if(a==='pickex'){pick(+v);render();return}
+    if(a==='nextex'){nextEx();render();return}
+    if(a==='done'){S.ph='diff';render();return}
+    if(a==='back'){S.ph='set';render();return}
+    if(a==='diff'){
+      var e2=curEx(),q=+v;begin();var n=exDone(e2)+1;
+      d.sets.push({exercise_id:e2.id,set:n,reps:S.reps,load_kg:S.kg,difficulty:[-1,0,2][q]});d.done[e2.id]=n;
+      S.fb=['Noté : charge relevée au prochain recalcul.','Noté : dans la cible.','Noté : charge allégée au prochain recalcul.'][q];
+      if(allDone()){finishSession('completed');return}
+      startRest(e2);return}
+    if(a==='mdone'){var e3=curEx();begin();d.sets.push({exercise_id:e3.id,set:1,duration_s:e3.duration_s});d.done[e3.id]=1;if(allDone()){finishSession('completed');return}nextEx();render();return}
+    if(a==='p30'){S.t+=30;S.tot+=30;upd();return}
+    if(a==='skip'){nextAfterRest();return}
+    if(a==='finish'){if(!d.sets.length){S.ph='reason';render()}else finishSession(allDone()?'completed':'partial');return}
+    if(a==='reason'){finishSession('skipped',v);return}
+    if(a==='meal'){var fl=mflags();fl[+v]=fl[+v]?0:1;render();return}
+    if(a==='nextmeal'){var f2=mflags(),mi=f2.indexOf(0);if(mi>=0)f2[mi]=1;render();return}
+    if(a==='unmeal'){var f3=mflags(),li=f3.lastIndexOf(1);if(li>=0)f3[li]=0;render();return}
+    if(a==='sat'){d.ev.sat=+v;render();return}
+    if(a==='fat'){d.ev.fat=+v;render();return}
+    if(a==='tab'){S.tab=+v;render();return}
+    if(a==='dis'){var j=d.ev.dis.indexOf(v);if(j<0)d.ev.dis.push(v);else d.ev.dis.splice(j,1);render();return}
+    if(a==='reset'){d.ev={sat:3,fat:3,dis:[]};S.msg='';render();return}
+    if(a==='save'){
+      if(!d.m){S.msg='Fais d\'abord l\'évaluation du matin.';render();return}
+      d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);S.msg='';S.hm='';render();return}
+    if(a==='unsave'){d.saved=false;render();return}
+  });
+  initEx();render();
+  return {go:go,state:function(){return S},prog:function(){return PROG}};
+}
+
+var pn=document.getElementById('pn'),cap_=document.getElementById('cap'),pa,cur=0;
+function drawNav(){pn.innerHTML=SC.map(function(n,i){return '<button class="'+(i===cur?'on':'')+'" data-i="'+i+'">'+n+'</button>'}).join('')}
+pn.addEventListener('click',function(e){var b=e.target.closest('[data-i]');if(!b)return;pa.go(+b.getAttribute('data-i'))});
+pa=Phone(document.getElementById('pa'),function(s,t,dt){cur=s;drawNav();cap_.textContent=SC[s]+' · '+(t==='lt'?'clair':'sombre')+' · '+cap(fr(dt))});
+window.xystos=pa;
+})();
+</script>
+<script>if('serviceWorker' in navigator)addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})</script>
+</body>
+</html>
