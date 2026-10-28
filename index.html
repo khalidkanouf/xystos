@@ -73,8 +73,8 @@ body{margin:0;background:var(--page);color:var(--ptx);font-family:var(--sans);pa
 .sw{display:flex;justify-content:center;align-items:baseline;gap:16px}
 .sw button{font-size:15px;color:var(--tx2);height:44px;padding:0 4px}
 .sw button.on{font-family:var(--serif);font-weight:800;font-size:22px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx)}
-.tabs{display:flex;justify-content:space-between;gap:6px}
-.tabs button{flex:1;height:46px;font-size:14px;color:var(--tx2);position:relative}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto;height:46px;padding:0 12px;font-size:14px;color:var(--tx2);position:relative;white-space:nowrap}
 .tabs button.on{color:var(--tx);font-weight:500}
 .tabs button.on::after{content:"";position:absolute;left:18%;right:18%;bottom:2px;height:2px;border-radius:1px;background:var(--acc)}
 .hn{font-weight:200;font-size:64px;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
@@ -215,7 +215,7 @@ function tzIso(date){var n=new Date(),o=-n.getTimezoneOffset(),sg=o>=0?'+':'-',a
 function dur(b,w){var x=(w.split(':')[0]*60+ +w.split(':')[1])-(b.split(':')[0]*60+ +b.split(':')[1]);if(x<0)x+=1440;return x}
 function hm(min){return Math.floor(min/60)+' h '+pad(min%60)}
 var gid=0;
-var SHORT={bench_press:'Couché',barbell_row:'Rowing',overhead_press:'Militaire',face_pull:'Face pull',squat:'Squat',romanian_deadlift:'Soulevé',walking_lunge:'Fentes',calf_raise:'Mollets',incline_press:'Incliné',lat_pulldown:'Tirage',lateral_raise:'Élévations',triceps_pushdown:'Triceps',leg_press:'Presse',hip_thrust:'Hip thrust',leg_curl:'Curl',cable_crunch:'Crunch',cat_cow:'Chat-vache',worlds_greatest_stretch:'Fente',hip_90_90:'Hanches',thoracic_rotation:'Thorax'};
+var SHORT={bench_press:'Couché',barbell_row:'Rowing',overhead_press:'Militaire',face_pull:'Face pull',squat:'Squat',romanian_deadlift:'Soulevé',walking_lunge:'Fentes',calf_raise:'Mollets',incline_press:'Incliné',lat_pulldown:'Tirage',lateral_raise:'Élévations',triceps_pushdown:'Triceps',leg_press:'Presse',hip_thrust:'Hip thrust',leg_curl:'Curl',cable_crunch:'Crunch',cat_cow:'Chat-vache',worlds_greatest_stretch:'Fente',hip_90_90:'Hanches',thoracic_rotation:'Thorax',rower_warmup:'Rameur',bike_warmup:'Vélo',warmup_pullups:'Tractions',warmup_cable_row:'Poulie',shoulder_mobility:'Épaules',cable_row:'Poulie',db_row_unilateral:'Rowing',assisted_dips:'Dips',weighted_crunch:'Crunch',vacuum:'Vacuum',side_plank:'Latéral',stretch_back_triceps:'Étirements',breathing:'Respiration',hip_circles:'Hanches',slow_squats:'Squats',front_lunges_warmup:'Fentes',hip_thrust_warmup:'Pont',high_knees:'Genoux',machine_squat:'Squat',hip_abduction:'Abduct.',leg_raise:'Jambes',stretch_quads:'Quadri',stretch_glutes:'Fessiers',stretch_lower_back:'Lombaires',shoulder_circles:'Épaules',bench_pushups:'Pompes',light_row:'Rowing',light_lateral:'Latérales',incline_db_press:'Incliné',ez_curl:'Curl EZ',db_alternate_curl:'Curl alt.',crunch_incline:'Crunch',plank:'Gainage',stretch_pecs:'Pecs',stretch_shoulders:'Épaules',stretch_biceps:'Biceps'};
 function shortName(e){return SHORT[e.id]||e.name.split(' ')[0]}
 
 var SC=['Aujourd\'hui','Séance','Nutrition','Travail','Lecture','Soir','Progression','Réglages'];
@@ -299,7 +299,8 @@ function Phone(root,onChange){
   function pidx(){var d=D();return d.m?'ABC'.indexOf(d.m.plan_chosen):d.msd.plan}
   function plan(){var d=dayOf(S.date);return d?d.plans['ABC'[pidx()]]:null}
   function exs(){var p=plan();return p&&p.sport?p.sport.exercises:[]}
-  function total(e){return e.kind==='strength'?e.sets:1}
+  function total(e){return e.kind==='strength'||e.kind==='core'?e.sets:1}
+  function info(e){var B={warmup:'Échauffement',main:'Bloc principal',core:'Abdos',cooldown:'Retour au calme'},t=[];if(e.block)t.push(B[e.block]);if(e.tempo)t.push('Tempo '+e.tempo.split('-').join('–'));if(e.per_side)t.push('par côté');return '<div class="note" style="text-align:center;margin:2px 0">'+t.join(' · ')+'</div>'+(e.target?'<div class="note" style="text-align:center">Cible : '+e.target+'</div>':'')+(e.note?'<div class="note" style="text-align:center">'+e.note+'</div>':'')}
   function exDone(e){return D().done[e.id]||0}
   function curEx(){var a=exs();return a.length?a[Math.min(S.ex,a.length-1)]:null}
   function allDone(){return exs().every(function(e){return exDone(e)>=total(e)})}
@@ -376,19 +377,20 @@ function Phone(root,onChange){
     if(S.ph==='rest'){
       ACT=actbar({a:'p30',i:'plus',t:'+ 30 s'},{a:'skip',i:'ok',t:'Prêt'},S.t/S.tot,'Repos · '+e.name);
       return header(e.name)+'<div class="wrap" style="width:250px;height:250px;margin-top:6px"><div id="rg">'+arcRing(250,S.t/S.tot,10,true)+'</div><button class="abs rb" data-a="skip" aria-label="Passer le repos" style="left:125px;top:125px;width:178px;height:178px"><span class="in" style="width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span id="tm" class="hn" style="font-size:44px;font-weight:300">'+mmss(S.t)+'</span><span class="lbl">Passer</span></span></button></div>'+
-      '<div class="rz" style="padding:16px 20px;text-align:center"><div class="lbl">Prochaine série</div><div style="font-size:22px;font-weight:300;margin:6px 0 4px">'+f1(S.kg)+' kg × '+S.reps+'</div><div class="lbl">'+S.fb+'</div></div>';
+      '<div class="rz" style="padding:16px 20px;text-align:center"><div class="lbl">Prochaine série</div><div style="font-size:22px;font-weight:300;margin:6px 0 4px">'+(e.kind==='strength'?f1(S.kg)+' kg × '+S.reps:e.name)+'</div><div class="lbl">'+S.fb+'</div></div>';
     }
     /* phase 'set' */
     var term='<div class="chips"><button data-a="finish">Terminer la séance</button></div>';
     if(e.kind!=='strength'){
-      ACT=actbar({a:'nextex',i:'x',t:'Passer'},{a:'mdone',i:'ok',t:'Fait'},(a.filter(function(x){return exDone(x)>=total(x)}).length)/a.length,'Exercice '+(S.ex+1)+' / '+a.length);
-      return header(p.sport.title)+tabs+'<div class="rz" style="padding:34px 22px;text-align:center"><div class="lbl">'+e.name+'</div><div class="hn" style="font-size:72px;margin-top:10px">'+mmss(e.duration_s)+'</div><div class="note" style="margin-top:10px">'+(dn?'Déjà fait':'À faire')+'</div></div>'+term;
+      ACT=actbar({a:'nextex',i:'x',t:'Passer'},{a:'mdone',i:'ok',t:e.kind==='core'&&tt>1?'Série faite':'Fait'},(a.filter(function(x){return exDone(x)>=total(x)}).length)/a.length,e.kind==='core'?'Série '+n+' / '+tt:'Exercice '+(S.ex+1)+' / '+a.length);
+      var big=e.duration_s?mmss(e.duration_s):(e.reps.min===e.reps.max?String(e.reps.min):e.reps.min+'–'+e.reps.max);
+      return header(p.sport.title)+tabs+info(e)+'<div class="rz" style="padding:34px 22px;text-align:center"><div class="lbl">'+e.name+'</div><div class="hn" style="font-size:72px;margin-top:10px">'+big+'</div><div class="note" style="margin-top:10px">'+(e.duration_s?'':'répétitions · ')+(e.kind==='core'?'série '+n+' / '+tt:(dn?'Déjà fait':'À faire'))+'</div></div>'+term;
     }
     ACT=actbar({a:'nextex',i:'x',t:'Passer'},{a:'done',i:'ok',t:'Série faite'},n/tt,'Série '+n+' / '+tt);
     var hid='h'+(++gid),pos=[[28,28],[252,28],[252,212],[28,212]],mk='',shown=Math.min(4,tt);
     for(var i=0;i<shown;i++){var cl=i<dn?'done':i===dn?'cur':'todo';mk+='<div class="abs mk '+cl+'" style="left:'+pos[i][0]+'px;top:'+pos[i][1]+'px">'+(i<dn?ic('ok',20,1.8):(i+1))+'</div>'}
     var rp=e.reps.min===e.reps.max?String(e.reps.min):e.reps.min+'–'+e.reps.max;
-    return header(p.sport.title)+tabs+
+    return header(p.sport.title)+tabs+info(e)+
     '<div class="wrap" style="width:280px;height:240px">'+hexa(hid)+mk+'<div class="abs" style="left:140px;top:120px;flex-direction:column;gap:4px;text-align:center"><span class="hn" style="font-size:54px">'+f1(e.load_kg)+'</span><span class="lbl">kg · cible '+rp+' reps</span></div></div>'+
     '<div class="stepper">'+stepc('Charge',f1(S.kg),'kg','kg',2.5)+stepc('Répétitions',S.reps,'reps','reps',1)+'</div>'+term;
   }
@@ -560,7 +562,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v2</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v3</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -593,6 +595,7 @@ function Phone(root,onChange){
     var body=[home,workout,nut,travail,lecture,night,progression,settings][S.scr]();
     root.innerHTML='<div class="isl"></div><div class="stat"><span>9:41</span><span><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none" aria-hidden="true"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".55"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/></svg></span></div><div class="scr">'+body+'</div>'+ACT+'<div class="hi"></div>';
     var nw=root.querySelector('.scr');if(nw)nw.scrollTop=sc;
+    var tb=root.querySelector('.tabs button.on');if(tb&&tb.scrollIntoView)tb.scrollIntoView({inline:'center',block:'nearest'});
     saveDs();keepAwake();
     if(onChange)onChange(S.scr,S.th[S.scr],S.date);
   }
@@ -677,7 +680,7 @@ function Phone(root,onChange){
       S.fb=['Noté : charge relevée au prochain recalcul.','Noté : dans la cible.','Noté : charge allégée au prochain recalcul.'][q];
       if(allDone()){finishSession('completed');return}
       startRest(e2);return}
-    if(a==='mdone'){var e3=curEx();begin();d.sets.push({exercise_id:e3.id,set:1,duration_s:e3.duration_s});d.done[e3.id]=1;if(allDone()){finishSession('completed');return}nextEx();render();return}
+    if(a==='mdone'){var e3=curEx();begin();var n3=exDone(e3)+1;d.sets.push(e3.duration_s?{exercise_id:e3.id,set:n3,duration_s:e3.duration_s}:{exercise_id:e3.id,set:n3,reps:e3.reps.min});d.done[e3.id]=n3;if(allDone()){finishSession('completed');return}if(e3.kind==='core'&&n3<e3.sets){startRest(e3);return}nextEx();render();return}
     if(a==='p30'){S.t+=30;S.tot+=30;upd();return}
     if(a==='skip'){nextAfterRest();return}
     if(a==='finish'){if(!d.sets.length){S.ph='reason';render()}else finishSession(allDone()?'completed':'partial');return}
