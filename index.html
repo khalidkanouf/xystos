@@ -380,7 +380,7 @@ function Phone(root,onChange){
     }
     /* phase 'set' */
     var term='<div class="chips"><button data-a="finish">Terminer la séance</button></div>';
-    if(e.kind==='mobility'){
+    if(e.kind!=='strength'){
       ACT=actbar({a:'nextex',i:'x',t:'Passer'},{a:'mdone',i:'ok',t:'Fait'},(a.filter(function(x){return exDone(x)>=total(x)}).length)/a.length,'Exercice '+(S.ex+1)+' / '+a.length);
       return header(p.sport.title)+tabs+'<div class="rz" style="padding:34px 22px;text-align:center"><div class="lbl">'+e.name+'</div><div class="hn" style="font-size:72px;margin-top:10px">'+mmss(e.duration_s)+'</div><div class="note" style="margin-top:10px">'+(dn?'Déjà fait':'À faire')+'</div></div>'+term;
     }
@@ -560,6 +560,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
+    '<div class="rz set"><div><b>Application xystos-v2</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
