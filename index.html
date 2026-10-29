@@ -389,7 +389,7 @@ function Phone(root,onChange){
     ACT=actbar({a:'plan',i:'minus',t:'Alléger'},{a:'mok',i:'ok',t:'Lancer'},0.2,'Plan '+'ABC'[m.plan]);
     var zones=['épaule','dos','genou','poignet'];
     var sp=p.sport?p.sport.title+' · '+p.sport.duration_min+' min':'Jour de repos';
-    return header(dsub())+
+    return header(dsub())+express()+
     '<div class="lbl" style="margin:0 0 -8px 6px">Évaluation du matin</div>'+
     '<div class="rz set"><div><b>Sommeil</b><span>Heures dormies</span></div><div class="rs"><button class="rb" data-a="sl" data-d="-0.5" aria-label="Moins">'+ic('minus',22,1.5)+'</button><span style="min-width:60px">'+f1(m.sleep.toFixed(1))+' h</span><button class="rb acc" data-a="sl" data-d="0.5" aria-label="Plus">'+ic('plus',22,1.7)+'</button></div></div>'+
     '<div class="in" style="padding:16px;border-radius:28px"><div class="lbl" style="margin:0 0 12px 4px">Énergie</div>'+rt('en',m.energy)+'</div>'+
@@ -397,13 +397,20 @@ function Phone(root,onChange){
     (m.pain.length?'<div class="chips" style="margin-top:12px">'+[['Légère',3],['Forte',6]].map(function(x){return '<button class="'+(m.lvl===x[1]?'on':'')+'" data-a="pl" data-v="'+x[1]+'">'+x[0]+'</button>'}).join('')+'</div>':'')+'</div>'+
     '<div class="rz" style="padding:16px 20px;text-align:center"><div class="lbl">Plan proposé</div><div style="font-family:var(--serif);font-weight:800;font-size:24px;letter-spacing:.04em;margin:6px 0 4px">PLAN '+'ABC'[m.plan]+'</div><div class="lbl">'+sp+'</div></div>';
   }
+  function express(){
+    var d=D(),day=dayOf(S.date);if(!day||d.saved)return '';
+    var sp=day.plans.A.sport,b='';
+    if(sp){b='<button data-a="express" data-v="fait">Séance faite comme prévu</button><button data-a="express" data-v="allege">Faite en version allégée</button><button data-a="express" data-v="non">Pas aujourd\'hui</button>'}
+    else{b='<button data-a="express" data-v="repos">Journée normale</button>'}
+    return '<div class="rz" style="padding:16px 18px;margin:0 0 14px"><div class="lbl" style="margin:0 0 4px">Journée express · 1 geste</div><div class="note" style="margin:0 0 10px">Pas le temps de tout saisir ? Un tap suffit, le coach se base sur le plan.</div><div class="chips" style="flex-wrap:wrap">'+b+'</div></div>';
+  }
   function home(){
     var d=D(),day=dayOf(S.date);
     if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
     if(!d.m)return morning();
     var p=plan(),wi=weekInfo(),cur=stage(),frac=cur/8,fo=forme(),sl=dur(p.sleep.bedtime,p.sleep.wake);
     ACT=actbar({a:'plan',i:'minus',t:'Alléger'},{a:'go',v:p.sport?I_SEANCE:I_NUT,i:'ok',t:p.sport?'Commencer':'Repas'},frac,'Plan '+d.m.plan_chosen+' · étape '+cur+' / 8');
-    return header(dsub())+
+    return header(dsub())+express()+
     '<div class="sw"><button data-a="dd" data-v="-1">Hier</button><button class="on" data-a="dd" data-v="0">'+DN[pd(S.date).getDay()]+'</button><button data-a="dd" data-v="1">Demain</button></div>'+
     '<div class="wrap" style="width:250px;height:250px">'+orbit(cur)+arcRing(210,Math.max(0.004,frac),5,false,true).replace('style="position:absolute;left:0;top:0;overflow:visible"','style="position:absolute;left:20px;top:20px;overflow:visible"')+
       '<div class="abs rb" style="left:125px;top:125px;width:146px;height:146px"><div class="in" style="width:116px;height:116px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center"><span class="acc">'+ic('sun',20,1.4)+'</span><span class="lbl" style="font-size:11px">Forme du jour</span><span style="font-size:30px;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums">'+fo+'<em class="u" style="font-size:13px;margin-left:2px">%</em></span></div></div></div>'+
@@ -553,7 +560,7 @@ function Phone(root,onChange){
       var js=JSON.stringify(d.entry,null,2),msgs=check(d.entry);
       ACT=actbar({a:'unsave',i:'l',t:'Modifier'},{a:'go',v:0,i:'ok',t:'Accueil'},1,'Journée enregistrée');
       return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="acc" style="margin-bottom:8px">'+ic('ok',32,1.4)+'</div><div style="font-family:var(--serif);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase">Historique prêt</div><div class="lbl" style="margin-top:8px">'+d.entry.entry_id+'</div><div class="note" style="margin-top:8px">'+(msgs.length?'<span class="acc">Non conforme :</span><br>'+msgs.join('<br>'):'Conforme au contrat. Il sera déposé dans iCloud Drive au prochain passage.')+'</div></div>'+
-      '<div class="chips"><button data-a="jv">'+(S.jv?'Masquer le JSON':'Voir le JSON')+'</button><button data-a="copy" data-v="entry">Copier</button><button data-a="exp" data-v="entry">Exporter</button></div>'+(S.hm?'<div class="note">'+S.hm+'</div>':'')+(S.jv?'<pre class="js" id="jsv">'+js.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>':'');
+      '<div class="chips"><button data-a="jv">'+(S.jv?'Masquer le JSON':'Voir le JSON')+'</button><button data-a="sc" data-v="entry">Envoyer au Mac</button><button data-a="copy" data-v="entry">Copier</button><button data-a="exp" data-v="entry">Exporter</button></div>'+(S.hm?'<div class="note">'+S.hm+'</div>':'')+(S.jv?'<pre class="js" id="jsv">'+js.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>':'');
     }
     var filled=(d.ev.sat?1:0)+(d.ev.fat?1:0)+Math.min(1,d.ev.dis.length);
     ACT=actbar({a:'reset',i:'x',t:'Effacer'},{a:'save',i:'ok',t:'Enregistrer'},filled/3,'Bilan · '+filled+' / 3');
@@ -691,7 +698,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v4</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v6</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -803,6 +810,7 @@ function Phone(root,onChange){
     if(a==='jv'){S.jv=!S.jv;S.hm='';render();return}
     if(a==='hclear'){S.hist=[];saveHist(S.hist);S.hm='';render();return}
     if(a==='exp'){exportFiles(v==='all'?S.hist:[d.entry]);return}
+    if(a==='sc'){location.href='shortcuts://run-shortcut?name='+encodeURIComponent('XYSTOS Journée')+'&input=text&text='+encodeURIComponent(JSON.stringify(d.entry));return}
     if(a==='copy'){copy(v==='all'?JSON.stringify(S.hist,null,2):JSON.stringify(d.entry,null,2));return}
     if(a==='pickex'){pick(+v);S.sel=undefined;if(S.ph==='list')S.ph='set';render();return}
     if(a==='stab'){var tb=+v;if(tb===1&&S.ph==='rest'){nextAfterRest();return}stop();S.ph=tb===0?'list':tb===1?'set':'cfg';render();return}
@@ -842,6 +850,18 @@ function Phone(root,onChange){
     if(a==='tab'){S.tab=+v;render();return}
     if(a==='dis'){var j=d.ev.dis.indexOf(v);if(j<0)d.ev.dis.push(v);else d.ev.dis.splice(j,1);render();return}
     if(a==='reset'){d.ev={sat:3,fat:3,dis:[]};S.msg='';render();return}
+    if(a==='express'){
+      var dy=dayOf(S.date),pl=v==='allege'?'B':'A',spx=dy.plans[pl].sport,sx=[];
+      d.m={sleep_h:7,energy:3,pain:[],plan_chosen:pl};
+      if(spx&&(v==='fait'||v==='allege')){
+        spx.exercises.forEach(function(e){
+          if(e.kind==='strength'||e.kind==='core'){for(var i=1;i<=e.sets;i++){var o={exercise_id:e.id,set:i,reps:(e.reps&&e.reps.max)||10,difficulty:0};if(e.load_kg!=null)o.load_kg=e.load_kg;sx.push(o)}}
+          else if(e.duration_s){sx.push({exercise_id:e.id,set:1,duration_s:e.duration_s,difficulty:0})}
+        });
+        d.status='completed';d.sets=sx;d.reason=null;
+      }else if(v==='non'){d.status='skipped';d.reason='temps';d.sets=[]}
+      var nm=dy.plans[pl].nutrition.meals.length;d.meals=[];for(var j=0;j<nm;j++)d.meals.push(1);
+      d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);S.msg='';S.hm='';S.scr=5;render();return}
     if(a==='save'){
       if(!d.m){S.msg='Fais d\'abord l\'évaluation du matin.';render();return}
       d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);S.msg='';S.hm='';render();return}
