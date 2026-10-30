@@ -350,8 +350,169 @@ function exportFiles(list){
   if(navigator.canShare&&navigator.canShare({files:files})){navigator.share({files:files,title:'Historique XYSTOS'}).catch(function(){});return}
   files.forEach(function(f){var a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000)});
 }
+/* Synchronisation Dropbox (dossier d'application) : envoi automatique de la journée, réception automatique du programme.
+   Connexion OAuth2 avec PKCE, sans serveur ni secret. Les fichiers suivent la même arborescence que iCloud :
+   [<profil>/]historique/AAAA-MM-JJ_Jnn.json  (iPhone -> Mac)   et   [<profil>/]programme/programme.json  (Mac -> iPhone). */
+var DBX=(function(){
+  var K='xystos-dbx',P='xystos-dbx-pkce',Q='xystos-dbx-pending';
+  var URLS={auth:'https://www.dropbox.com/oauth2/authorize',tok:'https://api.dropboxapi.com/oauth2/token',meta:'https://api.dropboxapi.com/2/files/get_metadata',up:'https://content.dropboxapi.com/2/files/upload',down:'https://content.dropboxapi.com/2/files/download'};
+  var c={key:'',sub:'',refresh:'',access:'',exp:0,last:'',rev:'',pulled:''},ui={msg:'',code:'',open:false,busy:false};
+  var redraw=function(){},applyProg=function(){},getProg=function(){return null};
+  function load(){try{var o=JSON.parse(localStorage.getItem(K)||'null');if(o)Object.keys(o).forEach(function(k){c[k]=o[k]})}catch(e){}}
+  function save(){try{localStorage.setItem(K,JSON.stringify(c))}catch(e){}}
+  function pend(){try{return JSON.parse(localStorage.getItem(Q)||'[]')}catch(e){return []}}
+  function setPend(a){try{localStorage.setItem(Q,JSON.stringify(a))}catch(e){}}
+  function say(t){ui.msg=t;redraw()}
+  function b64u(buf){var s='',b=new Uint8Array(buf);for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+  function rnd(n){var a=new Uint8Array(n);crypto.getRandomValues(a);return b64u(a)}
+  function redirect(){return location.origin+location.pathname}
+  function standalone(){return !!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches))}
+  function esc(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+  function form(o){return Object.keys(o).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(o[k])}).join('&')}
+  function dossier(){return c.sub?c.sub.replace(/^\/+|\/+$/g,'')+'/':''}
+  function arg(o){return JSON.stringify(o).replace(/[\u007f-￿]/g,function(ch){return '\\u'+('0000'+ch.charCodeAt(0).toString(16)).slice(-4)})}
+  function linkCode(){return btoa(unescape(encodeURIComponent(JSON.stringify({v:1,key:c.key,refresh:c.refresh,sub:c.sub}))))}
+
+  async function tokenCall(o){
+    var r=await fetch(URLS.tok,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:form(o)});
+    var j=await r.json();if(!r.ok)throw new Error(j.error_description||j.error||('Dropbox '+r.status));return j;
+  }
+  async function token(force){
+    if(!force&&c.access&&Date.now()<c.exp-60000)return c.access;
+    var j=await tokenCall({grant_type:'refresh_token',refresh_token:c.refresh,client_id:c.key});
+    c.access=j.access_token;c.exp=Date.now()+(j.expires_in||14400)*1000;save();return c.access;
+  }
+  async function appel(faire){
+    var r=await faire(await token(false));
+    if(r.status===401){r=await faire(await token(true))}
+    return r;
+  }
+  async function upload(p,text){
+    var r=await appel(function(t){return fetch(URLS.up,{method:'POST',headers:{'Authorization':'Bearer '+t,'Dropbox-API-Arg':arg({path:p,mode:'overwrite',autorename:false,mute:true}),'Content-Type':'application/octet-stream'},body:new Blob([text])})});
+    if(!r.ok)throw new Error('Dropbox '+r.status);return r.json();
+  }
+  async function meta(p){
+    var r=await appel(function(t){return fetch(URLS.meta,{method:'POST',headers:{'Authorization':'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({path:p})})});
+    if(r.status===409)return null;
+    if(!r.ok)throw new Error('Dropbox '+r.status);return r.json();
+  }
+  async function download(p){
+    var r=await appel(function(t){return fetch(URLS.down,{method:'POST',headers:{'Authorization':'Bearer '+t,'Dropbox-API-Arg':arg({path:p})}})});
+    if(!r.ok)throw new Error('Dropbox '+r.status);return r.text();
+  }
+
+  /* ---------- connexion ---------- */
+  async function connecter(){
+    if(!c.key){say('Colle d\'abord la clé de l\'application Dropbox.');return}
+    var v=rnd(48),st=rnd(12);
+    var ch=b64u(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
+    try{localStorage.setItem(P,JSON.stringify({v:v,st:st,key:c.key,sub:c.sub}))}catch(e){}
+    save();
+    location.href=URLS.auth+'?'+form({client_id:c.key,response_type:'code',code_challenge:ch,code_challenge_method:'S256',token_access_type:'offline',redirect_uri:redirect(),state:st});
+  }
+  async function retour(){
+    var q=new URLSearchParams(location.search);if(!q.get('code')&&!q.get('error'))return false;
+    var code=q.get('code'),st=q.get('state'),err=q.get('error_description')||q.get('error');
+    history.replaceState(null,'',location.pathname);
+    var p=null;try{p=JSON.parse(localStorage.getItem(P)||'null')}catch(e){}
+    try{localStorage.removeItem(P)}catch(e){}
+    if(err){say('Connexion refusée : '+err);return true}
+    if(!p||p.st!==st){say('Retour de connexion non reconnu : relance la connexion depuis Safari.');return true}
+    try{
+      var j=await tokenCall({grant_type:'authorization_code',code:code,code_verifier:p.v,client_id:p.key,redirect_uri:redirect()});
+      c.key=p.key;c.sub=p.sub||'';c.refresh=j.refresh_token;c.access=j.access_token;c.exp=Date.now()+(j.expires_in||14400)*1000;save();
+      ui.open=true;ui.code=linkCode();say('Dropbox connecté. Si tu utilises l\'application installée, copie le code de liaison ci-dessous et colle-le dans ses Réglages.');
+    }catch(e){say('Connexion impossible : '+e.message)}
+    return true;
+  }
+  function lier(texte){
+    try{
+      var o=JSON.parse(decodeURIComponent(escape(atob(String(texte).trim()))));
+      if(o.v!==1||!o.key||!o.refresh)throw 0;
+      c.key=o.key;c.refresh=o.refresh;c.sub=o.sub||'';c.access='';c.exp=0;c.rev='';save();say('Dropbox lié. Synchronisation…');sync();
+    }catch(e){say('Code de liaison non reconnu.')}
+  }
+  function deconnecter(){c.refresh='';c.access='';c.exp=0;c.rev='';c.last='';save();ui.code='';say('Dropbox déconnecté sur ce téléphone.')}
+
+  /* ---------- échanges ---------- */
+  var enCours=false;
+  async function vider(){
+    var a=pend();if(!a.length)return 0;
+    var restes=[],n=0;
+    for(var i=0;i<a.length;i++){
+      try{await upload('/'+dossier()+'historique/'+a[i].id+'.json',a[i].text);n++;c.last=new Date().toISOString()}
+      catch(e){restes.push(a[i])}
+    }
+    setPend(restes);save();return n;
+  }
+  function envoyer(entry){
+    var a=pend().filter(function(x){return x.id!==entry.entry_id});
+    a.push({id:entry.entry_id,text:JSON.stringify(entry,null,2)+'\n'});setPend(a);
+    if(c.refresh)sync();
+  }
+  async function recevoir(){
+    var p='/'+dossier()+'programme/programme.json',m=await meta(p);
+    if(!m)return 'aucun programme dans Dropbox';
+    if(m.rev===c.rev)return 'programme à jour';
+    var o=JSON.parse(await download(p));
+    if(o.schema!==1||!Array.isArray(o.days)||!o.horizon||!o.constraints)throw new Error('programme.json non valide');
+    c.rev=m.rev;c.pulled=new Date().toISOString();save();
+    var cur=getProg();
+    if(!cur||Date.parse(o.generated_at)>Date.parse(cur.generated_at)){applyProg(o);return 'programme mis à jour (révision '+o.revision+')'}
+    return 'programme à jour';
+  }
+  async function sync(){
+    if(!c.refresh||enCours)return;enCours=true;ui.busy=true;redraw();
+    try{
+      var n=await vider(),r=await recevoir();
+      ui.msg=(n?n+' journée(s) envoyée(s). ':'')+'Dropbox : '+r+'.';
+    }catch(e){ui.msg='Dropbox : '+e.message+(pend().length?' · '+pend().length+' journée(s) en attente.':'')}
+    enCours=false;ui.busy=false;redraw();
+  }
+  function demarrer(o){
+    load();redraw=o.redraw||redraw;applyProg=o.applyProg||applyProg;getProg=o.getProg||getProg;
+    retour().then(function(){if(c.refresh)sync()});
+    document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&c.refresh)sync()});
+    addEventListener('online',function(){if(c.refresh)sync()});
+  }
+
+  /* ---------- panneau des réglages ---------- */
+  var champ='display:block;width:100%;box-sizing:border-box;margin:6px 0 10px;padding:12px 14px;border:0;border-radius:16px;background:var(--in);color:inherit;font:inherit;font-size:14px';
+  function panel(){
+    var ok=!!c.refresh,att=pend().length;
+    var h='<div class="lbl" style="margin:6px 0 -6px 6px">Synchronisation Dropbox</div>';
+    h+='<div class="rz set"><div><b>'+(ok?'Connecté':'Non connecté')+'</b><span>'+(ok?(att?att+' journée(s) en attente d\'envoi':'Rien en attente')+(c.last?' · dernier envoi '+esc(new Date(c.last).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):''):'La journée part toute seule vers le Mac, et le nouveau programme arrive tout seul.')+'</span></div></div>';
+    if(ui.msg)h+='<div class="note">'+esc(ui.msg)+'</div>';
+    if(ok){
+      h+='<div class="chips"><button data-a="dbx-sync">'+(ui.busy?'Synchronisation…':'Synchroniser maintenant')+'</button><button data-a="dbx-code">Code de liaison</button><button data-a="dbx-off">Déconnecter</button></div>';
+      if(ui.open){var code=ui.code||linkCode();h+='<div class="note">Colle ce code dans les Réglages de l\'application installée :</div><textarea readonly style="'+champ+';height:84px" onclick="this.select()">'+esc(code)+'</textarea><div class="chips"><button data-a="dbx-copy">Copier</button></div>'}
+    }else{
+      h+='<label class="lbl" style="margin:8px 0 0 6px">Clé de l\'application Dropbox</label><input style="'+champ+'" autocapitalize="off" autocorrect="off" spellcheck="false" value="'+esc(c.key)+'" oninput="DBX.set(\'key\',this.value)">';
+      h+='<label class="lbl" style="margin:0 0 0 6px">Dossier du profil (vide pour le profil 1)</label><input style="'+champ+'" autocapitalize="off" autocorrect="off" spellcheck="false" value="'+esc(c.sub)+'" oninput="DBX.set(\'sub\',this.value)">';
+      if(!standalone())h+='<div class="chips"><button data-a="dbx-on">Connecter Dropbox</button></div>';
+      else h+='<div class="note">Pour connecter : ouvre cette adresse dans Safari, connecte Dropbox, puis colle le code de liaison ici.</div>';
+      h+='<label class="lbl" style="margin:0 0 0 6px">Code de liaison</label><input style="'+champ+'" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="colle le code ici" oninput="DBX.set(\'link\',this.value)">';
+      h+='<div class="chips"><button data-a="dbx-link">Lier avec ce code</button></div>';
+    }
+    return h;
+  }
+  var tmp={link:''};
+  function set(k,v){if(k==='link')tmp.link=v;else{c[k]=String(v).trim();save()}}
+  function action(a){
+    if(a==='dbx-on')connecter();
+    else if(a==='dbx-sync')sync();
+    else if(a==='dbx-off')deconnecter();
+    else if(a==='dbx-code'){ui.open=!ui.open;redraw()}
+    else if(a==='dbx-link')lier(tmp.link);
+    else if(a==='dbx-copy'){var code=ui.code||linkCode();(navigator.clipboard?navigator.clipboard.writeText(code):Promise.reject()).then(function(){say('Code copié.')}).catch(function(){say('Sélectionne le code et copie-le à la main.')})}
+  }
+  var api={_retour:retour,demarrer:demarrer,envoyer:envoyer,panel:panel,action:action,set:set,sync:sync,_c:c,_ui:ui};
+  window.DBX=api;
+  return api;
+})();
+
 function Phone(root,onChange){
-  var S={scr:0,date:todayClamp(),menu:false,ph:'set',ex:0,kg:0,reps:0,t:0,tot:0,fb:'',tab:0,th:loadTh(),rest:150,keep:true,vib:true,demo:false,sample:true,pw:0,pt:0,lift:'bench_press',ds:loadDs(),hist:loadHist(),msg:'',jv:false,hv:false,hm:''},tm=null,ACT='';
+  var S={scr:0,date:todayClamp(),menu:false,ph:'set',ex:0,kg:0,reps:0,t:0,tot:0,fb:'',tab:0,th:loadTh(),rest:150,keep:true,vib:true,demo:false,sample:false,pw:0,pt:0,lift:'bench_press',ds:loadDs(),hist:loadHist(),msg:'',jv:false,hv:false,hm:''},tm=null,ACT='';
   function stop(){if(tm){clearInterval(tm);tm=null}}
   function D(dt){dt=dt||S.date;if(!S.ds[dt])S.ds[dt]={m:null,msd:{sleep:7,energy:3,pain:[],lvl:3,plan:0,manual:false},sets:[],done:{},status:null,reason:null,started:null,t0:0,dur:0,meals:[],water:0,ev:{sat:3,fat:3,dis:[]},saved:false,entry:null,wk:{cut:0,i:0,t:null,run:false,sec:0,fin:false,post:false},rdBase:0,rdSec:0,rdRun:false};return S.ds[dt]}
   function dayOf(dt){var r=null;PROG.days.forEach(function(d){if(d.date===dt)r=d});return r}
@@ -559,8 +720,8 @@ function Phone(root,onChange){
     if(d.saved){
       var js=JSON.stringify(d.entry,null,2),msgs=check(d.entry);
       ACT=actbar({a:'unsave',i:'l',t:'Modifier'},{a:'go',v:0,i:'ok',t:'Accueil'},1,'Journée enregistrée');
-      return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="acc" style="margin-bottom:8px">'+ic('ok',32,1.4)+'</div><div style="font-family:var(--serif);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase">Historique prêt</div><div class="lbl" style="margin-top:8px">'+d.entry.entry_id+'</div><div class="note" style="margin-top:8px">'+(msgs.length?'<span class="acc">Non conforme :</span><br>'+msgs.join('<br>'):'Conforme au contrat. Il sera déposé dans iCloud Drive au prochain passage.')+'</div></div>'+
-      '<div class="chips"><button data-a="jv">'+(S.jv?'Masquer le JSON':'Voir le JSON')+'</button><button data-a="sc" data-v="entry">Envoyer au Mac</button><button data-a="copy" data-v="entry">Copier</button><button data-a="exp" data-v="entry">Exporter</button></div>'+(S.hm?'<div class="note">'+S.hm+'</div>':'')+(S.jv?'<pre class="js" id="jsv">'+js.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>':'');
+      return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="acc" style="margin-bottom:8px">'+ic('ok',32,1.4)+'</div><div style="font-family:var(--serif);font-weight:800;font-size:26px;letter-spacing:.04em;text-transform:uppercase">Historique prêt</div><div class="lbl" style="margin-top:8px">'+d.entry.entry_id+'</div><div class="note" style="margin-top:8px">'+(msgs.length?'<span class="acc">Non conforme :</span><br>'+msgs.join('<br>'):'Conforme au contrat. Il part tout seul vers le Mac si Dropbox est connecté.')+'</div></div>'+
+      '<div class="chips"><button data-a="jv">'+(S.jv?'Masquer le JSON':'Voir le JSON')+'</button><button data-a="sc" data-v="entry">Via Raccourci iCloud</button><button data-a="copy" data-v="entry">Copier</button><button data-a="exp" data-v="entry">Exporter</button></div>'+(S.hm?'<div class="note">'+S.hm+'</div>':'')+(S.jv?'<pre class="js" id="jsv">'+js.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>':'');
     }
     var filled=(d.ev.sat?1:0)+(d.ev.fat?1:0)+Math.min(1,d.ev.dis.length);
     ACT=actbar({a:'reset',i:'x',t:'Effacer'},{a:'save',i:'ok',t:'Enregistrer'},filled/3,'Bilan · '+filled+' / 3');
@@ -698,12 +859,12 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v6</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v7</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
-    '<div class="lbl" style="margin:6px 0 -6px 6px">Historique</div>'+
-    '<div class="rz set"><div><b>'+S.hist.length+' journée'+(S.hist.length>1?'s':'')+' enregistrée'+(S.hist.length>1?'s':'')+'</b><span>Prêtes pour le prochain passage dans iCloud</span></div></div>'+
+    DBX.panel()+'<div class="lbl" style="margin:6px 0 -6px 6px">Historique</div>'+
+    '<div class="rz set"><div><b>'+S.hist.length+' journée'+(S.hist.length>1?'s':'')+' enregistrée'+(S.hist.length>1?'s':'')+'</b><span>Envoyées toutes seules si Dropbox est connecté</span></div></div>'+
     '<div class="chips"><button data-a="hv">'+(S.hv?'Masquer':'Voir le JSON')+'</button><button data-a="exp" data-v="all">Exporter tout</button><button data-a="copy" data-v="all">Tout copier</button><button data-a="hclear">Vider</button></div>'+(S.hv?'<pre class="js" id="jsv">'+hs+'</pre>':'')+
     '<div class="lbl" style="margin:6px 0 -6px 6px">Apparence par écran</div>'+rows+
     '<div class="chips"><button data-a="threset">Rétablir les réglages par défaut</button></div>'+
@@ -805,6 +966,7 @@ function Phone(root,onChange){
     if(a==='threset'){S.th=DEF.slice();saveTh(S.th);render();return}
     if(a==='tog'){S[k]=!S[k];render();return}
     if(a==='rest'){S.rest=Math.max(30,Math.min(300,S.rest+dd));render();return}
+    if(a.indexOf('dbx')===0){DBX.action(a);return}
     if(a==='import'){var f=root.querySelector('#pf');if(f)f.click();return}
     if(a==='hv'){S.hv=!S.hv;S.hm='';render();return}
     if(a==='jv'){S.jv=!S.jv;S.hm='';render();return}
@@ -861,13 +1023,14 @@ function Phone(root,onChange){
         d.status='completed';d.sets=sx;d.reason=null;
       }else if(v==='non'){d.status='skipped';d.reason='temps';d.sets=[]}
       var nm=dy.plans[pl].nutrition.meals.length;d.meals=[];for(var j=0;j<nm;j++)d.meals.push(1);
-      d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);S.msg='';S.hm='';S.scr=5;render();return}
+      d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);DBX.envoyer(d.entry);S.msg='';S.hm='';S.scr=5;render();return}
     if(a==='save'){
       if(!d.m){S.msg='Fais d\'abord l\'évaluation du matin.';render();return}
-      d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);S.msg='';S.hm='';render();return}
+      d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);DBX.envoyer(d.entry);S.msg='';S.hm='';render();return}
     if(a==='unsave'){d.saved=false;render();return}
   });
   initEx();render();
+  DBX.demarrer({redraw:function(){render()},getProg:function(){return PROG},applyProg:function(o){PROG=o;try{localStorage.setItem('xystos-prog',JSON.stringify(o))}catch(e){}if(S.date<o.horizon.start||S.date>o.detailed_until)S.date=todayClamp();render()}});
   return {go:go,state:function(){return S},prog:function(){return PROG}};
 }
 
