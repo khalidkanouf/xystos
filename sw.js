@@ -1,6 +1,6 @@
 /* Service worker XYSTOS : l'app s'ouvre hors ligne.
    Changer VERSION à chaque mise à jour de index.html pour que le téléphone récupère la nouvelle version. */
-const VERSION = 'xystos-v7';
+const VERSION = 'xystos-v8';
 const FICHIERS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const POLICES = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 

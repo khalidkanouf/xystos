@@ -357,7 +357,7 @@ var DBX=(function(){
   var K='xystos-dbx',P='xystos-dbx-pkce',Q='xystos-dbx-pending';
   var URLS={auth:'https://www.dropbox.com/oauth2/authorize',tok:'https://api.dropboxapi.com/oauth2/token',meta:'https://api.dropboxapi.com/2/files/get_metadata',up:'https://content.dropboxapi.com/2/files/upload',down:'https://content.dropboxapi.com/2/files/download'};
   var c={key:'',sub:'',refresh:'',access:'',exp:0,last:'',rev:'',pulled:''},ui={msg:'',code:'',open:false,busy:false};
-  var redraw=function(){},applyProg=function(){},getProg=function(){return null};
+  var redraw=function(){},applyProg=function(){},getProg=function(){return null},getHist=function(){return []},derniereErreur='';
   function load(){try{var o=JSON.parse(localStorage.getItem(K)||'null');if(o)Object.keys(o).forEach(function(k){c[k]=o[k]})}catch(e){}}
   function save(){try{localStorage.setItem(K,JSON.stringify(c))}catch(e){}}
   function pend(){try{return JSON.parse(localStorage.getItem(Q)||'[]')}catch(e){return []}}
@@ -389,7 +389,7 @@ var DBX=(function(){
   }
   async function upload(p,text){
     var r=await appel(function(t){return fetch(URLS.up,{method:'POST',headers:{'Authorization':'Bearer '+t,'Dropbox-API-Arg':arg({path:p,mode:'overwrite',autorename:false,mute:true}),'Content-Type':'application/octet-stream'},body:new Blob([text])})});
-    if(!r.ok)throw new Error('Dropbox '+r.status);return r.json();
+    if(!r.ok){var t='';try{t=(await r.text()).slice(0,160)}catch(e){}throw new Error('Dropbox '+r.status+(t?' · '+t:''))}return r.json();
   }
   async function meta(p){
     var r=await appel(function(t){return fetch(URLS.meta,{method:'POST',headers:{'Authorization':'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({path:p})})});
@@ -421,7 +421,7 @@ var DBX=(function(){
     try{
       var j=await tokenCall({grant_type:'authorization_code',code:code,code_verifier:p.v,client_id:p.key,redirect_uri:redirect()});
       c.key=p.key;c.sub=p.sub||'';c.refresh=j.refresh_token;c.access=j.access_token;c.exp=Date.now()+(j.expires_in||14400)*1000;save();
-      ui.open=true;ui.code=linkCode();say('Dropbox connecté. Si tu utilises l\'application installée, copie le code de liaison ci-dessous et colle-le dans ses Réglages.');
+      toutEnFile();ui.open=true;ui.code=linkCode();say('Dropbox connecté. Si tu utilises l\'application installée, copie le code de liaison ci-dessous et colle-le dans ses Réglages.');
     }catch(e){say('Connexion impossible : '+e.message)}
     return true;
   }
@@ -429,7 +429,7 @@ var DBX=(function(){
     try{
       var o=JSON.parse(decodeURIComponent(escape(atob(String(texte).trim()))));
       if(o.v!==1||!o.key||!o.refresh)throw 0;
-      c.key=o.key;c.refresh=o.refresh;c.sub=o.sub||'';c.access='';c.exp=0;c.rev='';save();say('Dropbox lié. Synchronisation…');sync();
+      c.key=o.key;c.refresh=o.refresh;c.sub=o.sub||'';c.access='';c.exp=0;c.rev='';save();toutEnFile();say('Dropbox lié. Synchronisation…');sync();
     }catch(e){say('Code de liaison non reconnu.')}
   }
   function deconnecter(){c.refresh='';c.access='';c.exp=0;c.rev='';c.last='';save();ui.code='';say('Dropbox déconnecté sur ce téléphone.')}
@@ -438,12 +438,17 @@ var DBX=(function(){
   var enCours=false;
   async function vider(){
     var a=pend();if(!a.length)return 0;
-    var restes=[],n=0;
+    var restes=[],n=0;derniereErreur='';
     for(var i=0;i<a.length;i++){
       try{await upload('/'+dossier()+'historique/'+a[i].id+'.json',a[i].text);n++;c.last=new Date().toISOString()}
-      catch(e){restes.push(a[i])}
+      catch(e){restes.push(a[i]);derniereErreur=e.message}
     }
     setPend(restes);save();return n;
+  }
+  function toutEnFile(){
+    var a=pend(),ids={};a.forEach(function(x){ids[x.id]=1});
+    getHist().forEach(function(e){if(e&&e.entry_id&&!ids[e.entry_id])a.push({id:e.entry_id,text:JSON.stringify(e,null,2)+'\n'})});
+    setPend(a);
   }
   function envoyer(entry){
     var a=pend().filter(function(x){return x.id!==entry.entry_id});
@@ -465,12 +470,12 @@ var DBX=(function(){
     if(!c.refresh||enCours)return;enCours=true;ui.busy=true;redraw();
     try{
       var n=await vider(),r=await recevoir();
-      ui.msg=(n?n+' journée(s) envoyée(s). ':'')+'Dropbox : '+r+'.';
+      ui.msg=(n?n+' journée(s) envoyée(s). ':'')+(derniereErreur?'Envoi impossible : '+derniereErreur+' · '+pend().length+' en attente. ':'')+'Dropbox : '+r+'.';
     }catch(e){ui.msg='Dropbox : '+e.message+(pend().length?' · '+pend().length+' journée(s) en attente.':'')}
     enCours=false;ui.busy=false;redraw();
   }
   function demarrer(o){
-    load();redraw=o.redraw||redraw;applyProg=o.applyProg||applyProg;getProg=o.getProg||getProg;
+    load();redraw=o.redraw||redraw;applyProg=o.applyProg||applyProg;getProg=o.getProg||getProg;getHist=o.getHist||getHist;
     retour().then(function(){if(c.refresh)sync()});
     document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&c.refresh)sync()});
     addEventListener('online',function(){if(c.refresh)sync()});
@@ -500,7 +505,7 @@ var DBX=(function(){
   function set(k,v){if(k==='link')tmp.link=v;else{c[k]=String(v).trim();save()}}
   function action(a){
     if(a==='dbx-on')connecter();
-    else if(a==='dbx-sync')sync();
+    else if(a==='dbx-sync'){toutEnFile();sync()}
     else if(a==='dbx-off')deconnecter();
     else if(a==='dbx-code'){ui.open=!ui.open;redraw()}
     else if(a==='dbx-link')lier(tmp.link);
@@ -859,7 +864,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v7</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v8</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -1030,7 +1035,7 @@ function Phone(root,onChange){
     if(a==='unsave'){d.saved=false;render();return}
   });
   initEx();render();
-  DBX.demarrer({redraw:function(){render()},getProg:function(){return PROG},applyProg:function(o){PROG=o;try{localStorage.setItem('xystos-prog',JSON.stringify(o))}catch(e){}if(S.date<o.horizon.start||S.date>o.detailed_until)S.date=todayClamp();render()}});
+  DBX.demarrer({getHist:function(){return S.hist},redraw:function(){render()},getProg:function(){return PROG},applyProg:function(o){PROG=o;try{localStorage.setItem('xystos-prog',JSON.stringify(o))}catch(e){}if(S.date<o.horizon.start||S.date>o.detailed_until)S.date=todayClamp();render()}});
   return {go:go,state:function(){return S},prog:function(){return PROG}};
 }
 
