@@ -252,7 +252,10 @@ body{margin:0;background:var(--page);color:var(--ptx);font-family:var(--sans);pa
 .dev .mi2 .c{display:flex;align-items:center;justify-content:flex-end;gap:8px}.dev .mi2 .g{min-width:62px;text-align:center;font-size:15px}.dev .sgs{max-height:310px;overflow-y:auto;scrollbar-width:thin}
 .dev .sg.new{border-top:1px solid var(--ring);color:var(--acc)}.dev .sg.new b{color:var(--acc)}
 .dev .ports{display:flex;align-items:center;gap:8px}.dev .ports .lbl{flex:1}
-.dev .ports button{min-width:46px;height:38px;border-radius:19px;padding:0 12px;font-size:14px;color:var(--tx);background:var(--surf);box-shadow:var(--sh),var(--rim)}
+.dev .ports button{min-width:46px;height:38px;border-radius:19px;padding:0 12px;font-size:14px;color:var(--tx);background:var(--surf);box-shadow:var(--sh),var(--rim)}.dev .simb{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 8px 8px 16px;border-radius:20px;background:var(--in);box-shadow:inset 2px 2px 6px var(--lo),inset -2px -2px 6px var(--hi);font-size:12.5px;color:var(--acc)}
+.dev .simb button{height:32px;padding:0 14px;border-radius:16px;font-size:12.5px;color:var(--tx);background:var(--surf);box-shadow:var(--sh),var(--rim)}
+.dev .crn{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 20px;border-radius:26px}
+.dev .crn b{display:block;font-weight:200;font-size:38px;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
 
 /* mode application : plein écran, sans cadre de téléphone */
 html.pwa,html.pwa body{margin:0;padding:0;height:100%;min-height:0;overflow:hidden;background:#2A2E35;-webkit-text-size-adjust:100%;overscroll-behavior:none}
@@ -565,11 +568,36 @@ var DBX=(function(){
 })();
 
 function Phone(root,onChange){
-  var S={scr:0,date:todayClamp(),menu:false,ph:'set',ex:0,kg:0,reps:0,t:0,tot:0,fb:'',tab:0,intim:(function(){try{return localStorage.getItem('xystos-intim')!=='0'}catch(e){return true}})(),th:loadTh(),rest:150,keep:true,vib:true,demo:false,sample:false,pw:0,pt:0,lift:'bench_press',ds:loadDs(),hist:loadHist(),msg:'',jv:false,hv:false,hm:''},tm=null,ACT='';
+  var S={sim:null,cr:{on:false,acc:0,t0:0,mode:'up',target:0},scr:0,date:todayClamp(),menu:false,ph:'set',ex:0,kg:0,reps:0,t:0,tot:0,fb:'',tab:0,th:loadTh(),rest:150,keep:true,vib:true,demo:false,sample:false,pw:0,pt:0,lift:'bench_press',ds:loadDs(),hist:loadHist(),msg:'',jv:false,hv:false,hm:''},tm=null,ACT='';
   function stop(){if(tm){clearInterval(tm);tm=null}}
-  function D(dt){dt=dt||S.date;if(!S.ds[dt])S.ds[dt]={m:null,msd:{sleep:7,energy:3,pain:[],lvl:3,plan:0,manual:false},sets:[],done:{},status:null,reason:null,started:null,t0:0,dur:0,meals:[],mlog:{},extra:[],wb:[],water:0,ev:{sat:3,fat:3,dis:[]},saved:false,entry:null,wk:{cut:0,i:0,t:null,run:false,sec:0,fin:false,post:false},rdBase:0,rdSec:0,rdRun:false};return S.ds[dt]}
-  function dayOf(dt){var r=null;PROG.days.forEach(function(d){if(d.date===dt)r=d});return r}
+  function D(dt){dt=dt||S.date;var key=(S.sim&&S.sim.date===dt)?'sim':dt;if(!S.ds[key])S.ds[key]={m:null,msd:{sleep:7,energy:3,pain:[],lvl:3,plan:0,manual:false},sets:[],done:{},status:null,reason:null,started:null,t0:0,dur:0,meals:[],mlog:{},extra:[],wb:[],water:0,ev:{sat:3,fat:3,dis:[]},saved:false,entry:null,wk:{cut:0,i:0,t:null,run:false,sec:0,fin:false,post:false},rdBase:0,rdSec:0,rdRun:false};return S.ds[key]}
+  function dayOf(dt){if(S.sim&&S.sim.date===dt)return S.sim;var r=null;PROG.days.forEach(function(d){if(d.date===dt)r=d});return r}
   function pidx(){var d=D();return d.m?'ABC'.indexOf(d.m.plan_chosen):d.msd.plan}
+  /* ---------- séance d'essai : valider séries et répétitions, lancer le chrono, sans rien enregistrer ---------- */
+  function simBuild(){
+    var today=(typeof todayReal==='function'?todayReal():S.date),best=null,i;
+    for(i=0;i<PROG.days.length;i++){var dd=PROG.days[i],sp0=dd.plans.A.sport;if(dd.date>=today&&sp0&&sp0.exercises.some(function(e){return e.kind==='strength'})){best=dd;break}}
+    var base=JSON.parse(JSON.stringify(best||PROG.days[0])),sp;
+    if(best){sp=JSON.parse(JSON.stringify(best.plans.A.sport));
+      sp.exercises=sp.exercises.filter(function(e){return e.kind==='strength'||e.kind==='core'}).slice(0,4);
+      sp.exercises.forEach(function(e){if(e.sets)e.sets=Math.min(e.sets,3);if(e.kind==='strength')e.rest_s=20;if(e.duration_s)e.duration_s=Math.min(e.duration_s,30);e.block=e.block==='core'?'core':'main'});
+      sp.title='Essai · '+sp.title}
+    else sp={title:'Séance d\'essai',goal:'Essayer la validation des séries et le chrono',exercises:[
+      {id:'goblet_squat',name:'Squat gobelet',kind:'strength',sets:3,reps:{min:10,max:12},load_kg:8,rest_s:20,tempo:'3-1-1',block:'main'},
+      {id:'pushup',name:'Pompes',kind:'strength',sets:3,reps:{min:8,max:12},rest_s:20,block:'main'},
+      {id:'plank',name:'Gainage planche',kind:'core',sets:3,duration_s:30,rest_s:20,block:'core'}]};
+    sp.session_id=today+'_S99';sp.duration_min=Math.max(10,sp.exercises.length*4);
+    base.date=today;base.sim=true;['A','B','C'].forEach(function(k){base.plans[k].sport=JSON.parse(JSON.stringify(sp))});
+    delete base.evenement;return base}
+  function simBanner(){return S.sim&&S.date===S.sim.date?'<div class="simb"><span>Mode essai · rien n\'est enregistré</span><button data-a="simstop">Quitter</button></div>':''}
+  /* chronomètre : compte à rebours pour un exercice chronométré, sinon chrono libre */
+  var crT=null;
+  function crTxt(){var c=S.cr||{},el=(c.acc||0)+(c.on?Date.now()-c.t0:0),sec=c.mode==='down'?Math.max(0,Math.ceil((c.target*1000-el)/1000)):Math.floor(el/1000);return mmss(sec)}
+  function crHtml(e){var c=S.cr,down=!!(e&&e.duration_s&&e.kind!=='strength');if(!c.on&&!c.acc){c.mode=down?'down':'up';c.target=down?e.duration_s:0}
+    return '<div class="rz crn"><div><span class="lbl">Chrono'+(c.mode==='down'?' · '+c.target+' s':'')+'</span><b id="crv">'+crTxt()+'</b></div><div style="display:flex;gap:10px"><button class="rb" style="width:52px;height:52px" data-a="crgo" aria-label="'+(c.on?'Mettre en pause':'Lancer le chrono')+'">'+ic(c.on?'pause':'play',22,1.6)+'</button><button class="rb" style="width:52px;height:52px" data-a="crrs" aria-label="Remettre à zéro">'+ic('x',18,1.5)+'</button></div></div>'}
+  function crReset(){if(crT){clearInterval(crT);crT=null}S.cr={on:false,acc:0,t0:0,mode:'up',target:0}}
+  function crTick(){var el=root.querySelector('#crv');if(el)el.textContent=crTxt();var c=S.cr;
+    if(c&&c.on&&c.mode==='down'&&(c.acc+Date.now()-c.t0)>=c.target*1000){c.on=false;c.acc=c.target*1000;if(crT){clearInterval(crT);crT=null}beep(1320,320);setTimeout(function(){beep(1320,320)},450);try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}render()}}
   function plan(){var d=dayOf(S.date);return d?d.plans['ABC'[pidx()]]:null}
   function exs(){var p=plan();return p&&p.sport?p.sport.exercises:[]}
   function total(e){return e.kind==='strength'||e.kind==='core'?e.sets:1}
@@ -577,7 +605,7 @@ function Phone(root,onChange){
   function exDone(e){return D().done[e.id]||0}
   function curEx(){var a=exs();return a.length?a[Math.min(S.ex,a.length-1)]:null}
   function allDone(){return exs().every(function(e){return exDone(e)>=total(e)})}
-  function pick(i){var a=exs(),e=a[i];S.ex=i;if(e&&e.kind==='strength'){S.kg=e.load_kg;S.reps=e.reps.min}}
+  function pick(i){crReset();var a=exs(),e=a[i];S.ex=i;if(e&&e.kind==='strength'){S.kg=e.load_kg;S.reps=e.reps.min}}
   function initEx(){var a=exs(),i=0;for(var k=0;k<a.length;k++){if(exDone(a[k])<total(a[k])){i=k;break}}pick(i)}
   function nextEx(){var a=exs();for(var i=1;i<=a.length;i++){var j=(S.ex+i)%a.length;if(exDone(a[j])<total(a[j])){pick(j);return}}}
 
@@ -617,7 +645,7 @@ function Phone(root,onChange){
   function stage(){var d=D(),fl=mflags(),a=[!!d.m,!!fl[0],!!fl[1],!!fl[2],d.status==='completed'||d.status==='partial'||d.status==='skipped',!!fl[3],d.saved];return a.filter(Boolean).length}
 
   function header(sub){
-    return '<div class="hd"><div><h1>'+SC[S.scr]+'</h1><div class="sub">'+ic('pin',15,1.4)+sub+'</div></div><button class="rb rz mb" data-a="menu" aria-label="Changer d\'écran" aria-expanded="'+S.menu+'" style="border-radius:19px">'+ic('grid',22,1.4)+'</button>'+
+    return simBanner()+'<div class="hd"><div><h1>'+SC[S.scr]+'</h1><div class="sub">'+ic('pin',15,1.4)+sub+'</div></div><button class="rb rz mb" data-a="menu" aria-label="Changer d\'écran" aria-expanded="'+S.menu+'" style="border-radius:19px">'+ic('grid',22,1.4)+'</button>'+
     (S.menu?'<div class="menu rz">'+SC.map(function(n,i){return '<button class="'+(i===S.scr?'on':'')+'" data-a="go" data-v="'+i+'">'+n+(i===S.scr?'<i></i>':'')+'</button>'}).join('')+'</div>':'')+'</div>';
   }
   function dsub(){var d=dayOf(S.date);return d?cap(fr(S.date))+' · semaine '+weekInfo().w:cap(fr(S.date))+' · hors programme'}
@@ -652,7 +680,7 @@ function Phone(root,onChange){
       ex.map(function(e){return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--ring,rgba(0,0,0,.08));font-size:14px"><span>'+e.name+'</span><span class="note" style="margin:0;white-space:nowrap">'+ligne(e)+'</span></div>'}).join('')+plusDuJour(p)+'</div>';
   }
   function lastW(){var w=null;S.hist.forEach(function(h){if(h.other&&h.other.weight_kg)w=h.other.weight_kg});return w}
-  function wbo(d,o){var w=(d.wb||[]).filter(function(x){return x!=='intimacy'||S.intim});if(w.length)o.wellbeing=w;return o}
+  function wbo(d,o){var w=(d.wb||[]).filter(function(x){return x!=='intimacy'});if(w.length)o.wellbeing=w;return o}
   function wo(d,o){if(d.msd.w!=null)o.weight_kg=d.msd.w;return o}
   function pesee(){
     var d=D();if(!dayOf(S.date))return '';
@@ -664,7 +692,7 @@ function Phone(root,onChange){
   function futur(){return typeof todayReal==='function'&&S.date>todayReal()}
   function express(){
     var d=D(),day=dayOf(S.date);if(!day)return '';
-    if(futur()){var n=dayDiff(todayReal(),S.date);return '<div class="rz" style="padding:16px 18px;margin:0 0 14px"><div class="lbl" style="margin:0 0 4px">Aperçu · rien n\'est enregistré</div><div class="note" style="margin:0">Cette journée n\'a pas encore eu lieu'+(n>0?' : elle commence dans '+n+' jour'+(n>1?'s':''):'')+'. Tu peux explorer le programme ; l\'enregistrement s\'ouvre le jour même.</div></div>'}
+    if(futur()){var n=dayDiff(todayReal(),S.date);return '<div class="rz" style="padding:16px 18px;margin:0 0 14px"><div class="lbl" style="margin:0 0 4px">Aperçu · rien n\'est enregistré</div><div class="note" style="margin:0">Cette journée n\'a pas encore eu lieu'+(n>0?' : elle commence dans '+n+' jour'+(n>1?'s':''):'')+'. Tu peux explorer le programme ; l\'enregistrement s\'ouvre le jour même.</div><div class="chips" style="margin-top:12px"><button data-a="simstart">Essayer une séance d\'essai</button></div></div>'}
     if(d.saved)return '';
     var sp=day.plans.A.sport,b='';
     if(sp){b='<button data-a="express" data-v="fait">Séance faite comme prévu</button><button data-a="express" data-v="allege">Faite en version allégée</button><button data-a="express" data-v="non">Pas aujourd\'hui</button>'}
@@ -723,7 +751,7 @@ function Phone(root,onChange){
   }
   function railHtml(frac,label){return '<div class="s-rail"><button data-a="rail" data-v="1" aria-label="Plus">+</button><div class="tk"><i style="top:'+Math.round((1-Math.max(0,Math.min(1,frac)))*92)+'%"></i></div><button data-a="rail" data-v="-1" aria-label="Moins">−</button><span class="s-vl">'+label+'</span></div>'}
   function railFrac(e){var m=S.met;if(S.ph==='rest'&&m==='rest')return S.t/Math.max(60,S.tot*1.5);if(m==='rep')return (S.reps||0)/20;if(m==='kg')return (S.kg||0)/150;return restOf(e)/300}
-  function topbar(t,i){return '<div class="s-top"><div class="s-tt"><span class="s-i">'+wic(i||'dumb')+'</span><span>'+t+'</span></div><button class="s-ic" data-a="fin2" aria-label="Terminer la séance">'+wic('grid')+'</button></div>'}
+  function topbar(t,i){return simBanner()+'<div class="s-top"><div class="s-tt"><span class="s-i">'+wic(i||'dumb')+'</span><span>'+t+'</span></div><button class="s-ic" data-a="fin2" aria-label="Terminer la séance">'+wic('grid')+'</button></div>'}
   function tabsHtml(on){return '<div class="fade"></div><div class="s-tabs">'+[['list',0,'Liste des exercices'],['dumb',1,'Série'],['timer',2,'Réglage du repos']].map(function(o){return '<button class="'+(on===o[1]?'on':'')+'" data-a="stab" data-v="'+o[1]+'" aria-label="'+o[2]+'">'+wic(o[0])+'</button>'}).join('')+'</div>'}
   function setIdx(e){var m=exSets(e);if(S.sel!==undefined&&m[S.sel])return m[S.sel].i;return m.length?m[m.length-1].i:-1}
 
@@ -731,7 +759,7 @@ function Phone(root,onChange){
   function workout(){
     var d=D(),day=dayOf(S.date),p=plan();
     if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
-    if(!d.m){ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:0,i:'ok',t:'Matin'},0.1,'Matin à faire');return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="note">Commence par l\'évaluation du matin : elle choisit le plan A, B ou C.</div></div>'}
+    if(!d.m){ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:0,i:'ok',t:'Matin'},0.1,'Matin à faire');return header(dsub())+'<div class="rz" style="padding:26px 22px;text-align:center"><div class="note">Commence par l\'évaluation du matin : elle choisit le plan A, B ou C.</div><div class="chips" style="margin-top:14px;justify-content:center"><button data-a="simstart">Ou essayer une séance d\'essai</button></div></div>'}
     if(!p.sport){ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:I_NUT,i:'ok',t:'Repas'},0.5,'Jour de repos');return header(dsub())+'<div class="rz" style="padding:30px 22px;text-align:center"><div class="hn" style="font-size:44px;font-weight:300">Repos</div><div class="note" style="margin-top:12px">Aucune séance prévue. La récupération fait partie du programme.</div></div>'}
     if(d.status&&S.ph==='set')S.ph='fin';
     var a=exs(),e=curEx(),dn=exDone(e),tt=total(e),n=Math.min(tt,dn+1);
@@ -742,7 +770,7 @@ function Phone(root,onChange){
     if(S.ph==='fin'){
       var st=d.status,fl=st==='completed'?'Séance terminée':st==='partial'?'Séance partielle':'Séance annulée',ns=d.sets.length;
       ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:I_SOIR,i:'ok',t:'Bilan'},1,fl);
-      return header(p.sport.title)+'<div class="rz" style="padding:28px 22px;text-align:center"><div class="hn" style="font-size:60px">'+ns+'<em class="u" style="font-size:20px">série'+(ns>1?'s':'')+'</em></div><div class="lbl" style="margin:10px 0 14px">'+fl+(d.reason?' · '+d.reason:'')+'</div><div class="note">Enregistré sur l\'iPhone. Il part dans l\'historique quand tu valides le bilan du soir.</div></div>';
+      return header(p.sport.title)+'<div class="rz" style="padding:28px 22px;text-align:center"><div class="hn" style="font-size:60px">'+ns+'<em class="u" style="font-size:20px">série'+(ns>1?'s':'')+'</em></div><div class="lbl" style="margin:10px 0 14px">'+fl+(d.reason?' · '+d.reason:'')+'</div><div class="note">'+(S.sim?'Simulation terminée : rien n\'est enregistré dans ton historique.':'Enregistré sur l\'iPhone. Il part dans l\'historique quand tu valides le bilan du soir.')+'</div></div>';
     }
     if(S.met===undefined){S.met='rep';S.ov={};S.beep=true;S.auto=true;S.fbq=1}
     var blk={warmup:'Échauffement',main:'Bloc principal',core:'Abdos',cooldown:'Retour au calme'};
@@ -795,7 +823,7 @@ function Phone(root,onChange){
     }
     if(e.target||e.note)extra='<div class="note" style="margin-top:-2px">'+(e.target?'Cible : '+e.target+(e.note?' · ':''):'')+(e.note||'')+'</div>';
     return topbar(e.name)+'<div class="s-sub">'+sub+'</div><div class="s-card">'+dialSvg(cardOn?N:1,cardOn?doneN:0,null,S.met,isS?icons:[['rest','timer','Repos']])+'<div class="core">'+core+'</div><button class="disc" data-a="sdone" aria-label="Série faite : lancer le repos"></button>'+rail+'</div>'+
-      '<div class="s-hint">Touche le disque en finissant '+(isS||e.kind==='core'?'la série : le repos démarre':'l\'exercice')+'</div>'+extra+
+      '<div class="s-hint">Touche le disque en finissant '+(isS||e.kind==='core'?'la série : le repos démarre':'l\'exercice')+'</div>'+crHtml(e)+extra+
       (isS?'<div class="s-h"><span class="s-i">'+wic('rep')+'</span>Séries<span class="r">dernière fois · aujourd\'hui</span></div>'+barsHtml(e,tt,dn,dn):'');
   }
 
@@ -852,8 +880,8 @@ function Phone(root,onChange){
     }
     var filled=(d.ev.sat?1:0)+(d.ev.fat?1:0)+Math.min(1,d.ev.dis.length);
     ACT=actbar({a:'reset',i:'x',t:'Effacer'},{a:'save',i:'ok',t:'Enregistrer'},filled/3,'Bilan · '+filled+' / 3');
-    var D_=['travail prolongé','douleur','imprévu'],WB=[['massage','Massage'],['spa','Spa'],['sauna','Sauna'],['relaxation','Relaxation'],['intimacy','Intimité']];
-    var panel=S.tab===0?'<div class="lbl" style="margin:0 0 12px 4px">Satisfaction de la journée</div>'+rt('sat',d.ev.sat):S.tab===1?'<div class="lbl" style="margin:0 0 12px 4px">Fatigue ressentie</div>'+rt('fat',d.ev.fat):S.tab===3?'<div class="lbl" style="margin:0 0 12px 4px">Bien-être de la journée</div><div class="chips">'+WB.filter(function(x){return x[0]!=='intimacy'||S.intim}).map(function(x){return '<button class="'+((d.wb||[]).indexOf(x[0])>=0?'on':'')+'" data-a="wb" data-v="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>'+(S.intim?'<div class="note">Cette information reste sur ton téléphone et dans ton dossier : elle n\'est jamais envoyée à l\'IA.</div>':''):'<div class="lbl" style="margin:0 0 12px 4px">Perturbations</div><div class="chips">'+D_.map(function(x){return '<button class="'+(d.ev.dis.indexOf(x)>=0?'on':'')+'" data-a="dis" data-v="'+x+'">'+cap(x)+'</button>'}).join('')+'</div>';
+    var D_=['travail prolongé','douleur','imprévu'],WB=[['massage','Massage'],['spa','Spa'],['sauna','Sauna'],['relaxation','Relaxation']];
+    var panel=S.tab===0?'<div class="lbl" style="margin:0 0 12px 4px">Satisfaction de la journée</div>'+rt('sat',d.ev.sat):S.tab===1?'<div class="lbl" style="margin:0 0 12px 4px">Fatigue ressentie</div>'+rt('fat',d.ev.fat):S.tab===3?'<div class="lbl" style="margin:0 0 12px 4px">Bien-être de la journée</div><div class="chips">'+WB.map(function(x){return '<button class="'+((d.wb||[]).indexOf(x[0])>=0?'on':'')+'" data-a="wb" data-v="'+x[0]+'">'+x[1]+'</button>'}).join('')+'</div>':'<div class="lbl" style="margin:0 0 12px 4px">Perturbations</div><div class="chips">'+D_.map(function(x){return '<button class="'+(d.ev.dis.indexOf(x)>=0?'on':'')+'" data-a="dis" data-v="'+x+'">'+cap(x)+'</button>'}).join('')+'</div>';
     var id='g'+(++gid),sf=Math.min(1,sl/540);
     var ring='<svg width="250" height="250" viewBox="0 0 250 250" aria-hidden="true" style="position:absolute;left:0;top:0;overflow:visible"><defs><linearGradient id="'+id+'" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#3C8CFF"/><stop offset=".55" stop-color="#A43FCB"/><stop offset="1" stop-color="#F0426E"/></linearGradient></defs><circle cx="125" cy="125" r="112" fill="none" style="stroke:var(--in)" stroke-width="16"/><circle cx="125" cy="125" r="112" fill="none" stroke="url(#'+id+')" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+(2*Math.PI*112*sf).toFixed(1)+' 704" transform="rotate(-90 125 125)"/></svg>';
     return header('Coucher '+p.sleep.bedtime+' · lever '+p.sleep.wake)+
@@ -986,7 +1014,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v17</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v19</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -996,9 +1024,9 @@ function Phone(root,onChange){
     '<div class="lbl" style="margin:6px 0 -6px 6px">Apparence par écran</div>'+rows+
     '<div class="chips"><button data-a="threset">Rétablir les réglages par défaut</button></div>'+
     '<div class="lbl" style="margin:6px 0 -6px 6px">En salle</div>'+
+    '<button class="rz bt set" data-a="simstart"><div><b>Séance d\'essai</b><span>Valider séries et répétitions, lancer le chrono, sans rien enregistrer</span></div><span class="ck">'+ic('play',20,1.5)+'</span></button>'+
     tog('keep','Écran allumé','Pendant la séance, le travail et la lecture',S.keep)+
     tog('vib','Vibration','Indisponible sur iPhone en application web',S.vib)+
-    tog('intim','Suivi de l\'intimité','Propose « Intimité » dans le bilan du soir',S.intim)+
     tog('demo','Minuteurs accélérés','Démo : 1 s compte pour 1 min',S.demo)+
     tog('sample','Historique d\'exemple','Deux semaines dans Progression et Lecture',S.sample)+
     '<div class="rz set"><div><b>Repos par défaut</b><span>Repli si le programme n\'en fixe pas</span></div><div class="rs"><button class="rb" data-a="rest" data-d="-15" aria-label="Moins">'+ic('minus',22,1.5)+'</button><span>'+mmss(S.rest)+'</span><button class="rb acc" data-a="rest" data-d="15" aria-label="Plus">'+ic('plus',22,1.7)+'</button></div></div>';
@@ -1052,7 +1080,7 @@ function Phone(root,onChange){
     render()}
   function finishSession(st,reason){var d=D();d.status=st;if(reason)d.reason=reason;if(d.started)d.dur=Math.max(1,Math.round((Date.now()-d.t0)/60000));S.ph='fin';render()}
   function begin(){var d=D();if(!d.started){d.started=tzIso(S.date);d.t0=Date.now()}}
-  function setDate(dt){stop();Object.keys(S.ds).forEach(function(k){S.ds[k].wk.run=false;S.ds[k].rdRun=false});ensureTk();S.pw=0;S._wi=undefined;S.date=dt;S.ph='set';S.msg='';S.jv=false;initEx();render()}
+  function setDate(dt){if(S.sim&&dt!==S.sim.date){S.sim=null;delete S.ds.sim}crReset();stop();Object.keys(S.ds).forEach(function(k){S.ds[k].wk.run=false;S.ds[k].rdRun=false});ensureTk();S.pw=0;S._wi=undefined;S.date=dt;S.ph='set';S.msg='';S.jv=false;initEx();render()}
   function copy(txt){
     function ok(){S.hm='Copié dans le presse-papiers.';render()}
     function fb(){var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();var r=false;try{r=document.execCommand('copy')}catch(e){}document.body.removeChild(ta);S.hm=r?'Copié dans le presse-papiers.':'Copie refusée : sélectionne le texte du JSON.';render()}
@@ -1074,6 +1102,10 @@ function Phone(root,onChange){
     var b=e.target.closest('[data-a]');
     if(!b||!root.contains(b)){if(S.menu){S.menu=false;render()}return}
     var a=b.getAttribute('data-a'),v=b.getAttribute('data-v'),k=b.getAttribute('data-k'),dd=parseFloat(b.getAttribute('data-d')),d=D();
+    if(a==='simstart'){S.simPrev=S.date;stop();crReset();S.sim=simBuild();S.date=S.sim.date;delete S.ds.sim;var ds0=D();ds0.m={sleep_h:7,energy:3,pain:[],plan_chosen:'A'};S.scr=1;S.ph='set';S.msg='';S.menu=false;initEx();render();return}
+    if(a==='simstop'){stop();crReset();S.sim=null;delete S.ds.sim;S.date=S.simPrev&&S.simPrev!==undefined?S.simPrev:todayClamp();S.ph='set';S.scr=0;S.msg='';initEx();render();return}
+    if(a==='crgo'){var c=S.cr;if(c.on){c.acc+=Date.now()-c.t0;c.on=false;if(crT){clearInterval(crT);crT=null}}else{if(c.mode==='down'&&c.acc>=c.target*1000)c.acc=0;c.t0=Date.now();c.on=true;if(!crT)crT=setInterval(crTick,200)}render();return}
+    if(a==='crrs'){var e9=curEx();crReset();S.cr.mode=e9&&e9.duration_s&&e9.kind!=='strength'?'down':'up';S.cr.target=S.cr.mode==='down'?e9.duration_s:0;render();return}
     if(a==='menu'){S.menu=!S.menu;render();return}
     if(a==='go'){go(+v);return}
     if(a==='wtog'){var sg0=wkSegs();if(!sg0||d.wk.fin||d.wk.post)return;d.wk.run=!d.wk.run;S._wi=d.wk.i;ensureTk();render();return}
@@ -1098,7 +1130,7 @@ function Phone(root,onChange){
     if(a==='th'){S.th[+k]=v;saveTh(S.th);render();return}
     if(a==='threset'){S.th=DEF.slice();saveTh(S.th);render();return}
     if(a==='wb'){d.wb=d.wb||[];var wi=d.wb.indexOf(v);if(wi<0)d.wb.push(v);else d.wb.splice(wi,1);render();return}
-    if(a==='tog'){S[k]=!S[k];if(k==='intim'){try{localStorage.setItem('xystos-intim',S.intim?'1':'0')}catch(e){}}render();return}
+    if(a==='tog'){S[k]=!S[k];render();return}
     if(a==='rest'){S.rest=Math.max(30,Math.min(300,S.rest+dd));render();return}
     if(a.indexOf('dbx')===0){DBX.action(a);return}
     if(a==='import'){var f=root.querySelector('#pf');if(f)f.click();return}
@@ -1169,6 +1201,7 @@ function Phone(root,onChange){
     if(a==='reset'){d.ev={sat:3,fat:3,dis:[]};S.msg='';render();return}
     if(a==='w'){if(futur())return;var cur=d.msd.w!=null?d.msd.w:(lastW()||80);d.msd.w=Math.max(30,Math.min(300,Math.round((cur+parseFloat(v))*10)/10));render();return}
     if(a==='express'){
+      if(S.sim){S.msg='Simulation : rien n\'est enregistré dans ton historique.';render();return}
       if(futur()){S.msg='Cette journée n\'a pas encore eu lieu.';render();return}
       var dy=dayOf(S.date),pl=v==='allege'?'B':'A',spx=dy.plans[pl].sport,sx=[];
       d.m={sleep_h:7,energy:3,pain:[],plan_chosen:pl};
@@ -1182,6 +1215,7 @@ function Phone(root,onChange){
       var nm=dy.plans[pl].nutrition.meals.length;d.meals=[];for(var j=0;j<nm;j++)d.meals.push(1);
       d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);DBX.envoyer(d.entry);S.msg='';S.hm='';S.scr=5;render();return}
     if(a==='save'){
+      if(S.sim){S.msg='Simulation : rien n\'est enregistré dans ton historique.';render();return}
       if(futur()){S.msg='Cette journée n\'a pas encore eu lieu : elle s\'enregistre le jour même.';render();return}
       if(!d.m){S.msg='Fais d\'abord l\'évaluation du matin.';render();return}
       d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);DBX.envoyer(d.entry);S.msg='';S.hm='';render();return}
