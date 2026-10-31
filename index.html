@@ -235,6 +235,12 @@ body{margin:0;background:var(--page);color:var(--ptx);font-family:var(--sans);pa
 .bars i.on,.s-bars i.on{background:linear-gradient(180deg,var(--a3),var(--acc));box-shadow:0 0 18px var(--g2)}
 .bars i,.s-bars i{background:var(--surf);box-shadow:var(--sh),var(--rim)}
 .tabs button.on::after,.s-sw button.on::after{background:linear-gradient(90deg,var(--acc),var(--a3));box-shadow:0 0 10px var(--g2)}
+.dev .row .nmb{flex:1;min-width:0;text-align:left;display:block}
+.dev .row .rb.ed{width:42px;height:42px;color:var(--tx2)}
+.dev .mod{font-style:normal;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);margin-left:6px;font-weight:400}
+.dev .fi{height:48px;border:0;border-radius:18px;padding:0 14px;background:var(--in);color:var(--tx);font:400 15px var(--sans);box-shadow:inset 3px 3px 7px var(--lo),inset -3px -3px 7px var(--hi);min-width:0;width:100%}
+.dev .mi{min-height:62px;padding:8px 10px 8px 18px}
+.dev .addm .ck{color:var(--acc)}
 
 /* mode application : plein écran, sans cadre de téléphone */
 html.pwa,html.pwa body{margin:0;padding:0;height:100%;min-height:0;overflow:hidden;background:#2A2E35;-webkit-text-size-adjust:100%;overscroll-behavior:none}
@@ -275,6 +281,7 @@ var IC={
  batt:'<rect x="3" y="8" width="16" height="8" rx="2.5"/><path d="M21.5 11v2"/><path d="M6 11v2M9 11v2"/>',
  warn:'<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
  pin:'<path d="M12 21s6-5.2 6-10a6 6 0 0 0-12 0c0 4.8 6 10 6 10z"/><circle cx="12" cy="11" r="2"/>',
+ pen:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
  play:'<path d="M8 5l11 7-11 7z"/>',pause:'<path d="M8 5v14M16 5v14"/>',r:'<path d="M5 12h14M13 6l6 6-6 6"/>'
 };
 function ic(n,s,w){return P(IC[n],s,w)}
@@ -547,7 +554,7 @@ var DBX=(function(){
 function Phone(root,onChange){
   var S={scr:0,date:todayClamp(),menu:false,ph:'set',ex:0,kg:0,reps:0,t:0,tot:0,fb:'',tab:0,th:loadTh(),rest:150,keep:true,vib:true,demo:false,sample:false,pw:0,pt:0,lift:'bench_press',ds:loadDs(),hist:loadHist(),msg:'',jv:false,hv:false,hm:''},tm=null,ACT='';
   function stop(){if(tm){clearInterval(tm);tm=null}}
-  function D(dt){dt=dt||S.date;if(!S.ds[dt])S.ds[dt]={m:null,msd:{sleep:7,energy:3,pain:[],lvl:3,plan:0,manual:false},sets:[],done:{},status:null,reason:null,started:null,t0:0,dur:0,meals:[],water:0,ev:{sat:3,fat:3,dis:[]},saved:false,entry:null,wk:{cut:0,i:0,t:null,run:false,sec:0,fin:false,post:false},rdBase:0,rdSec:0,rdRun:false};return S.ds[dt]}
+  function D(dt){dt=dt||S.date;if(!S.ds[dt])S.ds[dt]={m:null,msd:{sleep:7,energy:3,pain:[],lvl:3,plan:0,manual:false},sets:[],done:{},status:null,reason:null,started:null,t0:0,dur:0,meals:[],mlog:{},extra:[],water:0,ev:{sat:3,fat:3,dis:[]},saved:false,entry:null,wk:{cut:0,i:0,t:null,run:false,sec:0,fin:false,post:false},rdBase:0,rdSec:0,rdRun:false};return S.ds[dt]}
   function dayOf(dt){var r=null;PROG.days.forEach(function(d){if(d.date===dt)r=d});return r}
   function pidx(){var d=D();return d.m?'ABC'.indexOf(d.m.plan_chosen):d.msd.plan}
   function plan(){var d=dayOf(S.date);return d?d.plans['ABC'[pidx()]]:null}
@@ -560,8 +567,19 @@ function Phone(root,onChange){
   function pick(i){var a=exs(),e=a[i];S.ex=i;if(e&&e.kind==='strength'){S.kg=e.load_kg;S.reps=e.reps.min}}
   function initEx(){var a=exs(),i=0;for(var k=0;k<a.length;k++){if(exDone(a[k])<total(a[k])){i=k;break}}pick(i)}
   function nextEx(){var a=exs();for(var i=1;i<=a.length;i++){var j=(S.ex+i)%a.length;if(exDone(a[j])<total(a[j])){pick(j);return}}}
+
+  /* ---------- ce que je mange vraiment : aliments en grammes, repas modifiés ou ajoutés ---------- */
+  var FOODS={"blanc de poulet":[120,23,0,2.5],"blanc de dinde":[110,24,0,1.5],"bœuf maigre 5 %":[125,21,0,5],"jambon blanc":[110,20,1,3],"saumon":[200,20,0,13],"cabillaud":[82,18,0,0.7],"thon au naturel":[110,25,0,1],"œufs":[143,12.5,1,10],"skyr":[60,11,4,0.2],"fromage blanc 0 %":[45,8,4,0.2],"tofu ferme":[120,13,2,7],"tempeh":[190,19,9,11],"lentilles (cuites)":[115,9,20,0.4],"pois chiches (cuits)":[130,7,21,2.5],"whey":[400,80,8,6],"riz basmati (cru)":[350,8,77,1],"pâtes (crues)":[355,12,72,1.5],"semoule (crue)":[360,12,73,1.5],"quinoa (cru)":[370,14,64,6],"pommes de terre":[77,2,17,0.1],"patate douce":[85,1.6,20,0.1],"pain complet":[250,9,45,3],"flocons d'avoine":[370,13,60,7],"banane":[90,1,20,0.3],"pomme":[52,0.3,12,0.2],"fruits rouges":[45,1,8,0.4],"légumes verts":[30,2.5,4,0.3],"salade et tomates":[20,1,3,0.2],"huile d'olive":[900,0,0,100],"amandes":[600,21,7,52],"noix":[650,15,7,65],"beurre de cacahuète":[600,25,15,50],"avocat":[160,2,2,15]},PIECE={"œufs":55,"banane":120,"pomme":150};
+  function parseIdea(t){var out=[],parts=(t||'').split(' · '),i,m;for(i=0;i<parts.length;i++){var q=parts[i].trim();
+    m=/^(\d+) (.+)$/.exec(q);if(m&&PIECE[m[2]]){out.push({n:m[2],g:(+m[1])*PIECE[m[2]]});continue}
+    m=/^(.+) (\d+(?:[.,]\d+)?) g$/.exec(q);if(m&&FOODS[m[1]]){out.push({n:m[1],g:parseFloat(m[2].replace(',','.'))});continue}
+    return null}return out.length?out:null}
+  function itemTxt(it){if(it.free)return it.n;var u=PIECE[it.n];return u&&it.g%u===0?(it.g/u)+' '+it.n:it.n+' '+Math.round(it.g)+' g'}
+  function itemMac(it){if(it.free)return{k:it.k||0,p:it.p||0,c:it.c||0,f:it.f||0};var f=FOODS[it.n];if(!f)return{k:0,p:0,c:0,f:0};var r=it.g/100;return{k:f[0]*r,p:f[1]*r,c:f[2]*r,f:f[3]*r}}
+  function itemsMac(its){var t={k:0,p:0,c:0,f:0};its.forEach(function(it){var m=itemMac(it);t.k+=m.k;t.p+=m.p;t.c+=m.c;t.f+=m.f});return{k:Math.round(t.k),p:Math.round(t.p),c:Math.round(t.c),f:Math.round(t.f)}}
+  function mval(i){var m=plan().nutrition.meals[i],d=D(),ml=d.mlog&&d.mlog[i];if(ml)return itemsMac(ml.items);return{k:m.kcal,p:m.protein_g,c:m.carbs_g,f:m.fat_g}}
   function mflags(){var p=plan(),n=p?p.nutrition.meals.length:0,d=D();while(d.meals.length<n)d.meals.push(0);return d.meals}
-  function tot(){var p=plan(),k=0,pr=0,c=0,f=0,fl=mflags();if(p)p.nutrition.meals.forEach(function(m,i){if(fl[i]){k+=m.kcal;pr+=m.protein_g;c+=m.carbs_g;f+=m.fat_g}});return{k:k,p:pr,c:c,f:f}}
+  function tot(){var p=plan(),k=0,pr=0,c=0,f=0,fl=mflags(),d=D();if(p)p.nutrition.meals.forEach(function(m,i){if(fl[i]){var v=mval(i);k+=v.k;pr+=v.p;c+=v.c;f+=v.f}});(d.extra||[]).forEach(function(e){var v=itemsMac(e.items);k+=v.k;pr+=v.p;c+=v.c;f+=v.f});return{k:k,p:pr,c:c,f:f}}
   function suggest(m){var pain=m.pain.length?m.lvl:0;if(pain>=5||(m.sleep<6&&m.energy<=2))return 2;if(m.sleep<6||m.energy<=2||pain>0)return 1;return 0}
   function forme(){var d=D(),m=d.m;if(!m)return 0;var pain=m.pain.length?m.pain[0].level:0;return Math.max(20,Math.min(98,Math.round(30+m.energy*10+(m.sleep_h-5)*5-pain*4-(m.plan_chosen==='C'?6:0))))}
   function doneOn(dt){var d=S.ds[dt];if(d&&(d.status==='completed'||d.status==='partial'))return true;return S.hist.some(function(h){return h.date===dt&&h.sessions.some(function(s){return s.status==='completed'||s.status==='partial'})})}
@@ -753,16 +771,36 @@ function Phone(root,onChange){
   /* ---------- Nutrition ---------- */
   function nut(){
     var day=dayOf(S.date);if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
-    var p=plan(),n=p.nutrition,T=tot(),fr_=T.k/n.kcal_target,fl=mflags(),k=fl.filter(Boolean).length,wl=D().water*0.25;
+    if(S.me)return mealEditor();
+    var p=plan(),n=p.nutrition,T=tot(),fr_=T.k/n.kcal_target,fl=mflags(),k=fl.filter(Boolean).length,wl=D().water*0.25,d=D();
     ACT=actbar({a:'unmeal',i:'minus',t:'Annuler'},{a:'nextmeal',i:'ok',t:'Repas pris'},k/n.meals.length,k+' repas sur '+n.meals.length);
     return header('Objectif '+fmtN(n.kcal_target)+' kcal')+
     '<div class="wrap" style="width:250px;height:250px"><div>'+arcRing(250,Math.max(0.01,fr_),10,true)+'</div><button class="abs rb" data-a="nextmeal" aria-label="Valider le prochain repas" style="left:125px;top:125px;width:178px;height:178px"><span class="in" style="width:140px;height:140px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span class="hn" style="font-size:42px;font-weight:300">'+fmtN(T.k)+'</span><span class="lbl">kcal · '+Math.round(fr_*100)+' %</span></span></button></div>'+
     '<div class="rz pill3"><div><b>'+T.p+' g</b><span>Protéines</span></div><div><b>'+T.c+' g</b><span>Glucides</span></div><div><b>'+T.f+' g</b><span>Lipides</span></div></div>'+
     '<div class="in" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px 8px 22px;height:70px;border-radius:26px"><div><div style="font-size:15px;font-weight:500">Hydratation</div><div class="lbl">'+f1(wl)+' / '+f1(n.hydration_l)+' L</div></div><div style="display:flex;gap:10px"><button class="rb" style="width:52px;height:52px" data-a="adj" data-k="water" data-d="-1" aria-label="Moins">'+ic('minus',22,1.5)+'</button><button class="rb acc" style="width:52px;height:52px" data-a="adj" data-k="water" data-d="1" aria-label="Plus">'+ic('plus',22,1.7)+'</button></div></div>'+
-    n.meals.map(function(m,i){return '<button class="rz bt row" data-a="meal" data-v="'+i+'"><span class="nm"><b>'+m.name+'</b><span>'+m.time+' · P '+m.protein_g+' · G '+m.carbs_g+' · L '+m.fat_g+'</span>'+(m.idea?'<span style="display:block;margin-top:5px;font-size:12.5px;line-height:1.4;white-space:normal">'+m.idea+'</span>':'')+'</span><span class="kc">'+m.kcal+'</span><span class="ck'+(fl[i]?' on':'')+'">'+(fl[i]?ic('ok',22,1.8):'')+'</span></button>'}).join('');
+    '<div class="lbl" style="margin:2px 0 -6px 4px">Touche un repas pour dire que tu l\'as pris, le crayon pour dire ce que tu as vraiment mangé.</div>'+
+    n.meals.map(function(m,i){var ml=d.mlog&&d.mlog[i],v=mval(i),idea=ml?ml.items.map(itemTxt).join(' · '):m.idea;
+      return '<div class="rz row"><button class="nmb" data-a="meal" data-v="'+i+'"><span class="nm"><b>'+m.name+(ml?' <i class="mod">modifié</i>':'')+'</b><span>'+m.time+' · P '+v.p+' · G '+v.c+' · L '+v.f+'</span>'+(idea?'<span style="display:block;margin-top:5px;font-size:12.5px;line-height:1.4;white-space:normal">'+idea+'</span>':'')+'</span></button><span class="kc">'+v.k+'</span><button class="rb ed" data-a="medit" data-v="'+i+'" aria-label="Modifier ce que j\'ai mangé">'+ic('pen',18,1.5)+'</button><button class="ck'+(fl[i]?' on':'')+'" data-a="meal" data-v="'+i+'" aria-label="Repas pris">'+(fl[i]?ic('ok',22,1.8):'')+'</button></div>'}).join('')+
+    (d.extra||[]).map(function(e,j){var v=itemsMac(e.items);return '<div class="rz row"><button class="nmb" data-a="medx" data-v="'+j+'"><span class="nm"><b>'+e.name+' <i class="mod">en plus</i></b><span>P '+v.p+' · G '+v.c+' · L '+v.f+'</span><span style="display:block;margin-top:5px;font-size:12.5px;line-height:1.4;white-space:normal">'+e.items.map(itemTxt).join(' · ')+'</span></span></button><span class="kc">'+v.k+'</span><button class="rb ed" data-a="medx" data-v="'+j+'" aria-label="Modifier">'+ic('pen',18,1.5)+'</button></div>'}).join('')+
+    '<button class="rz bt row addm" data-a="mextra"><span class="nm"><b>Ajouter un repas ou une collation</b><span>Ce que tu as mangé en plus ou à la place</span></span><span class="ck">'+ic('plus',22,1.6)+'</span></button>';
+  }
+  function mealEditor(){
+    var me=S.me,m=me.i>=0?plan().nutrition.meals[me.i]:null,T=itemsMac(me.items),opts=Object.keys(FOODS).map(function(n){return '<option value="'+n+'">'+n+'</option>'}).join('');
+    ACT=actbar({a:'mereset',i:'l',t:me.i===-1?'Annuler':me.x!==undefined?'Retirer':'Comme prévu'},{a:'mesave',i:'ok',t:'Enregistrer'},Math.min(1,T.k/Math.max(1,m?m.kcal:600)),T.k+' kcal');
+    return header(m?m.name:(me.x!==undefined?'Repas en plus':'Nouveau repas'))+
+    '<div class="rz pill3" style="grid-template-columns:repeat(4,1fr)"><div><b>'+T.k+'</b><span>kcal</span></div><div><b>'+T.p+' g</b><span>Prot.</span></div><div><b>'+T.c+' g</b><span>Gluc.</span></div><div><b>'+T.f+' g</b><span>Lip.</span></div></div>'+
+    (m?'<div class="lbl" style="margin:0 0 -6px 4px">Prévu : '+m.kcal+' kcal · P '+m.protein_g+' · G '+m.carbs_g+' · L '+m.fat_g+'</div>':'<div class="in" style="padding:6px 16px;border-radius:22px"><input class="fi" id="mnm" data-f="name" value="'+me.name.replace(/"/g,'&quot;')+'" placeholder="Nom (Collation, Restaurant…)"></div>')+
+    (me.items.length?me.items.map(function(it,i){var mm=itemMac(it);return '<div class="rz row mi"><span class="nm"><b>'+it.n+'</b><span>'+(it.free?'saisie libre':Math.round(mm.k)+' kcal · P '+Math.round(mm.p))+'</span></span>'+(it.free?'<span class="kc">'+Math.round(mm.k)+' kcal</span>':'<button class="rb" style="width:44px;height:44px" data-a="mg" data-k="'+i+'" data-d="-1" aria-label="Moins">'+ic('minus',18,1.5)+'</button><span class="kc" style="min-width:58px;text-align:center;color:var(--tx)">'+Math.round(it.g)+' g</span><button class="rb" style="width:44px;height:44px" data-a="mg" data-k="'+i+'" data-d="1" aria-label="Plus">'+ic('plus',18,1.5)+'</button>')+'<button class="rb" style="width:40px;height:40px" data-a="mdel" data-k="'+i+'" aria-label="Retirer">'+ic('x',16,1.5)+'</button></div>'}).join(''):'<div class="note">Aucun aliment : ajoutes-en un ci-dessous.</div>')+
+    '<div class="in" style="padding:14px 16px;border-radius:26px;display:flex;flex-direction:column;gap:10px"><div class="lbl">Ajouter un aliment (pour 100 g, tu règles les grammes après)</div><div style="display:flex;gap:10px"><select class="fi" id="mf" style="flex:1">'+opts+'</select><button class="rb" style="width:52px;height:52px" data-a="mfadd" aria-label="Ajouter">'+ic('plus',22,1.7)+'</button></div></div>'+
+    '<div class="in" style="padding:14px 16px;border-radius:26px;display:flex;flex-direction:column;gap:10px"><div class="lbl">Autre chose (restaurant, plat préparé…)</div><div style="display:flex;gap:10px"><input class="fi" id="mfn" data-f="fn" style="flex:1;min-width:0" placeholder="Quoi ?" value="'+(me.fn||'').replace(/"/g,'&quot;')+'"><input class="fi" id="mfk" data-f="fk" inputmode="numeric" style="width:84px" placeholder="kcal" value="'+(me.fk||'')+'"><button class="rb" style="width:52px;height:52px" data-a="mffree" aria-label="Ajouter">'+ic('plus',22,1.7)+'</button></div></div>'+
+    (S.msg?'<div class="note acc">'+S.msg+'</div>':'');
   }
 
   /* ---------- Soir ---------- */
+  function mealsLog(){var d=D(),p=plan(),fl=mflags(),out=[];
+    if(p)p.nutrition.meals.forEach(function(m,i){if(!fl[i])return;var ml=d.mlog&&d.mlog[i],v=mval(i),r={meal_id:m.id,name:m.name,time:m.time,status:ml?'modified':'eaten',kcal:v.k,protein_g:v.p,carbs_g:v.c,fat_g:v.f};if(ml)r.items=ml.items.map(itemTxt).join(' · ').slice(0,240);out.push(r)});
+    (d.extra||[]).forEach(function(e){var v=itemsMac(e.items);out.push({name:e.name,status:'extra',kcal:v.k,protein_g:v.p,carbs_g:v.c,fat_g:v.f,items:e.items.map(itemTxt).join(' · ').slice(0,240)})});
+    return out}
   function buildEntry(){
     var d=D(),day=dayOf(S.date),m=d.m,sp=day.plans.A.sport,idx=dayDiff(PROG.horizon.start,S.date)+1,sessions=[];
     if(sp&&d.status){var s={session_id:sp.session_id,status:d.status,sets:d.sets.slice()};if(d.reason)s.reason=d.reason;if(d.started){s.started_at=d.started;s.duration_min=d.dur}sessions.push(s)}
@@ -770,7 +808,7 @@ function Phone(root,onChange){
     return {schema:1,entry_id:S.date+'_J'+pad(idx),programme_revision:PROG.revision,date:S.date,
       morning:{sleep_h:m.sleep_h,energy:m.energy,pain:m.pain,plan_chosen:m.plan_chosen},
       sessions:sessions,evening:{satisfaction:d.ev.sat,fatigue:d.ev.fat,disruptions:d.ev.dis.slice()},
-      other:wo(d,{meals_done:fl.filter(Boolean).length,hydration_l:d.water*0.25,reading_min:d.rdBase+Math.floor(d.rdSec/60),work_min:Math.floor(d.wk.sec/60)})};
+      other:wo(d,{meals_done:fl.filter(Boolean).length,meals_log:mealsLog(),hydration_l:d.water*0.25,reading_min:d.rdBase+Math.floor(d.rdSec/60),work_min:Math.floor(d.wk.sec/60)})};
   }
   function night(){
     var day=dayOf(S.date);if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
@@ -917,7 +955,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v13</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v14</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -995,6 +1033,7 @@ function Phone(root,onChange){
     rd.onload=function(){try{var o=JSON.parse(rd.result);if(o.schema!==1||!Array.isArray(o.days)||!o.horizon||!o.constraints)throw 0;PROG=o;try{localStorage.setItem('xystos-prog',JSON.stringify(o))}catch(e){}S.ds={};S.date=o.horizon.start;S.hm='Programme importé · révision '+o.revision+'.'}catch(x){S.hm='Fichier non reconnu : ce n\'est pas un programme.json valide.'}render()};
     rd.readAsText(e.target.files[0]);
   });
+  root.addEventListener('input',function(e){var f=e.target.getAttribute&&e.target.getAttribute('data-f');if(f&&S.me)S.me[f]=e.target.value});
   root.addEventListener('click',function(e){
     var b=e.target.closest('[data-a]');
     if(!b||!root.contains(b)){if(S.menu){S.menu=false;render()}return}
@@ -1062,6 +1101,18 @@ function Phone(root,onChange){
     if(a==='skip'){nextAfterRest();return}
     if(a==='finish'){if(!d.sets.length){S.ph='reason';render()}else finishSession(allDone()?'completed':'partial');return}
     if(a==='reason'){finishSession('skipped',v);return}
+    if(a==='medit'){var mm0=plan().nutrition.meals[+v],ml0=d.mlog&&d.mlog[+v],it0=ml0?ml0.items.map(function(x){return Object.assign({},x)}):(parseIdea(mm0.idea)||[{n:mm0.name,free:1,k:mm0.kcal,p:mm0.protein_g,c:mm0.carbs_g,f:mm0.fat_g,g:0}]);S.me={i:+v,items:it0,name:mm0.name};S.msg='';render();return}
+    if(a==='mextra'){S.me={i:-1,items:[],name:'Collation'};S.msg='';render();return}
+    if(a==='medx'){var ex0=d.extra[+v];S.me={i:-1,x:+v,items:ex0.items.map(function(x){return Object.assign({},x)}),name:ex0.name};S.msg='';render();return}
+    if(a==='mg'&&S.me){var it1=S.me.items[+k],st=PIECE[it1.n]||10;it1.g=Math.max(PIECE[it1.n]?st:10,it1.g+dd*st);render();return}
+    if(a==='mdel'&&S.me){S.me.items.splice(+k,1);render();return}
+    if(a==='mfadd'&&S.me){var sel=root.querySelector('#mf');if(sel&&sel.value)S.me.items.push({n:sel.value,g:PIECE[sel.value]||100});render();return}
+    if(a==='mffree'&&S.me){var fn=(S.me.fn||'').trim(),fk=parseInt(S.me.fk,10);if(!fn||!(fk>0)){S.msg='Indique ce que c\'était et ses calories.';render();return}S.me.items.push({n:fn.slice(0,40),free:1,k:Math.min(3000,fk),p:0,c:0,f:0,g:0});S.me.fn='';S.me.fk='';S.msg='';render();return}
+    if(a==='mesave'&&S.me){if(!S.me.items.length){S.msg='Ajoute au moins un aliment.';render();return}
+      if(S.me.i>=0){d.mlog[S.me.i]={items:S.me.items};mflags()[S.me.i]=1}
+      else{var rec={name:(S.me.name||'Collation').trim().slice(0,40)||'Collation',items:S.me.items};if(S.me.x!==undefined)d.extra[S.me.x]=rec;else d.extra.push(rec)}
+      S.me=null;S.msg='';render();return}
+    if(a==='mereset'&&S.me){if(S.me.i>=0)delete d.mlog[S.me.i];else if(S.me.x!==undefined)d.extra.splice(S.me.x,1);S.me=null;S.msg='';render();return}
     if(a==='meal'){var fl=mflags();fl[+v]=fl[+v]?0:1;render();return}
     if(a==='nextmeal'){var f2=mflags(),mi=f2.indexOf(0);if(mi>=0)f2[mi]=1;render();return}
     if(a==='unmeal'){var f3=mflags(),li=f3.lastIndexOf(1);if(li>=0)f3[li]=0;render();return}
