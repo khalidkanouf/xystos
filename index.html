@@ -257,6 +257,26 @@ body{margin:0;background:var(--page);color:var(--ptx);font-family:var(--sans);pa
 .dev .crn{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 20px;border-radius:26px}
 .dev .crn b{display:block;font-weight:200;font-size:38px;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
 
+/* accueil : récit du jour */
+.story h2{font-family:var(--serif);font-weight:800;font-size:26px;letter-spacing:.03em;margin:4px 0 6px;text-transform:uppercase}
+.story p{font-size:15px;line-height:1.45;color:var(--tx2);margin:0}
+.story p b{color:var(--acc);font-weight:600}
+.hero{padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px;position:relative;border:1.5px solid transparent;background:linear-gradient(var(--bg),var(--bg)) padding-box,linear-gradient(135deg,var(--a3,var(--acc)),transparent 55%,var(--a4,var(--acc))) border-box}
+.hero .hx{display:flex;align-items:center;gap:14px}
+.hero .hx b{display:block;font-family:var(--serif);font-weight:800;font-size:21px;letter-spacing:.04em;text-transform:uppercase;line-height:1.15}
+.hero .hx em{display:block;font-style:normal;font-size:13px;color:var(--tx2);margin-top:4px}
+.hero .go{height:52px;border-radius:26px;background:var(--bg);box-shadow:-4px -4px 10px var(--hi),5px 5px 12px var(--lo);font-family:var(--serif);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:14px;color:var(--acc)}
+.tl{padding:6px 16px;display:flex;flex-direction:column;position:relative}
+.tl .tr{display:flex;align-items:center;gap:12px;text-align:left;padding:11px 0;position:relative;color:var(--tx)}
+.tl .tr+.tr{border-top:1px solid var(--ring)}
+.tl .tr i{width:22px;height:22px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:inset 2px 2px 4px var(--lo),inset -2px -2px 4px var(--hi);color:var(--acc)}
+.tl .tr.cu i{box-shadow:0 0 0 2px var(--acc),0 0 12px var(--glow)}
+.tl .tr.dn{opacity:.5}
+.tl .tr.dn i{background:var(--in)}
+.tl .th{font-variant-numeric:tabular-nums;font-size:13px;color:var(--tx2);width:42px;flex:none}
+.tl .tt b{display:block;font-weight:500;font-size:15px}
+.tl .tt em{display:block;font-style:normal;font-size:12px;color:var(--tx2);margin-top:2px}
+
 /* mode application : plein écran, sans cadre de téléphone */
 html.pwa,html.pwa body{margin:0;padding:0;height:100%;min-height:0;overflow:hidden;background:#2A2E35;-webkit-text-size-adjust:100%;overscroll-behavior:none}
 .pwa .top,.pwa .slot figcaption{display:none}
@@ -702,18 +722,43 @@ function Phone(root,onChange){
     else{b='<button data-a="express" data-v="repos">Journée normale</button>'}
     return '<div class="rz" style="padding:16px 18px;margin:0 0 14px"><div class="lbl" style="margin:0 0 4px">Journée express · 1 geste</div><div class="note" style="margin:0 0 10px">Pas le temps de tout saisir ? Un tap suffit, le coach se base sur le plan.</div><div class="chips" style="flex-wrap:wrap">'+b+'</div></div>';
   }
+  /* accueil : une histoire en trois temps — ce que je vois (le ton du jour), ce que je fais maintenant (une seule action), ce qui m'attend (la journée en frise) */
+  function mn(t){var q=String(t||'0:0').split(':');return (+q[0])*60+(+q[1]||0)}
+  function hh(m){m=Math.max(0,Math.min(1439,Math.round(m)));return ('0'+Math.floor(m/60)).slice(-2)+':'+('0'+m%60).slice(-2)}
+  function dayItems(){
+    var d=D(),p=plan(),fl=mflags(),w=d.wk,out=[],M=p.nutrition.meals;
+    M.forEach(function(m,i){out.push({t:mn(m.time),k:'meal',ic:'sun',scr:I_NUT,title:m.name,sub:Math.round(mval(i).k)+' kcal prévues',cta:'Voir le repas',done:!!fl[i]})});
+    var first=M.length?mn(M[0].time):450,x=p.sport_extra||[];
+    if(p.sport)out.push({t:first+90,k:'sport',ic:'bar',scr:I_SEANCE,title:p.sport.title.replace(/ — .*/,'').replace(' · facultatif',''),sub:p.sport.duration_min+' min'+(/facultatif/.test(p.sport.title)?' · facultatif':''),cta:'Commencer la séance',done:d.status==='completed'||d.status==='partial'||d.status==='skipped'});
+    else if(x.length)out.push({t:first+90,k:'sport',ic:'bar',scr:I_SEANCE,title:'Activités du jour',sub:x.map(function(e){return e.title}).join(' · '),cta:'Voir',done:d.status==='completed'||d.status==='partial'||d.status==='skipped'});
+    var sg=wkSegs();if(sg)out.push({t:mn(sg.b.start),k:'work',ic:'rep',scr:I_TRAV,title:'Bloc de travail',sub:sg.eff+' min · '+sg.segs.filter(function(q){return q.ph==='focus'}).length+' sprints',cta:'Lancer le bloc',done:!!(w.fin||w.post)});
+    var tg=p.reading?p.reading.minutes:0,bed=mn(p.sleep.bedtime);
+    if(tg)out.push({t:bed-75,k:'read',ic:'pen',scr:I_LECT,title:'Lecture',sub:tg+' min',cta:'Lire',done:(d.rdBase+Math.floor(d.rdSec/60))>=tg});
+    out.push({t:bed-30,k:'soir',ic:'moon',scr:I_SOIR,title:'Bilan du soir',sub:'Coucher '+p.sleep.bedtime,cta:'Faire le bilan',done:!!d.saved});
+    out.sort(function(a,b){return a.t-b.t});return out;
+  }
   function home(){
     var d=D(),day=dayOf(S.date);
     if(!day)return emptyDay('Cette date est hors de la fenêtre détaillée du programme.');
     if(!d.m)return morning();
-    var p=plan(),wi=weekInfo(),cur=stage(),frac=cur/8,fo=forme(),sl=dur(p.sleep.bedtime,p.sleep.wake);
-    ACT=actbar({a:'plan',i:'minus',t:'Alléger'},{a:'go',v:p.sport?I_SEANCE:I_NUT,i:'ok',t:p.sport?'Commencer':'Repas'},frac,'Plan '+d.m.plan_chosen+' · étape '+cur+' / 8');
-    return header(dsub())+express()+pesee()+
-    '<div class="sw"><button data-a="dd" data-v="-1">Hier</button><button class="on" data-a="dd" data-v="0">'+DN[pd(S.date).getDay()]+'</button><button data-a="dd" data-v="1">Demain</button></div>'+
-    '<div class="wrap" style="width:250px;height:250px">'+orbit(cur)+arcRing(210,Math.max(0.004,frac),5,false,true).replace('style="position:absolute;left:0;top:0;overflow:visible"','style="position:absolute;left:20px;top:20px;overflow:visible"')+
-      '<div class="abs rb" style="left:125px;top:125px;width:146px;height:146px"><div class="in" style="width:116px;height:116px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center"><span class="acc">'+ic('sun',20,1.4)+'</span><span class="lbl" style="font-size:11px">Forme du jour</span><span style="font-size:30px;font-weight:300;letter-spacing:-.02em;font-variant-numeric:tabular-nums">'+fo+'<em class="u" style="font-size:13px;margin-left:2px">%</em></span></div></div></div>'+
+    var p=plan(),wi=weekInfo(),fo=forme(),sl=dur(p.sleep.bedtime,p.sleep.wake),it=dayItems(),nd=it.filter(function(q){return q.done}).length,nx=null,i;
+    for(i=0;i<it.length;i++)if(!it[i].done){nx=it[i];break}
+    var isT=typeof todayReal==='function'&&S.date===todayReal(),hr=new Date().getHours(),
+      greet=isT?(hr<11?'Bonjour':hr<18?'Bon après-midi':'Bonsoir'):S.date>(typeof todayReal==='function'?todayReal():S.date)?'À venir':'Ce jour-là';
+    var tone=fo>=75?'Tu es en forme':fo>=55?'Une forme correcte':'Journée à ménager',
+      plan_=[p.sport?(p.sport.title.replace(/ — .*/,'').replace(' · facultatif','')+' de '+p.sport.duration_min+' min'):((p.sport_extra||[]).length?'des activités douces':'un jour de repos'),p.nutrition.meals.length+' repas'].concat(p.work_blocks&&p.work_blocks[0]?[p.work_blocks[0].minutes+' min de travail']:[]);
+    ACT=actbar({a:'plan',i:'minus',t:'Alléger'},nx?{a:'go',v:nx.scr,i:'ok',t:nx.k==='sport'?'Commencer':nx.k==='meal'?'Repas':nx.k==='work'?'Travail':nx.k==='read'?'Lecture':'Soir'}:{a:'go',v:I_PROG,i:'ok',t:'Progrès'},it.length?nd/it.length:1,nd+' / '+it.length+' étapes');
+    var hero=nx?
+      '<div class="hero rz"><span class="lbl">'+(isT?'Maintenant':'Au programme')+' · '+hh(nx.t)+'</span><div class="hx"><span class="acc">'+ic(nx.ic,30,1.3)+'</span><div><b>'+nx.title+'</b><em>'+nx.sub+'</em></div></div><button class="go" data-a="go" data-v="'+nx.scr+'">'+nx.cta+'</button></div>':
+      '<div class="hero rz"><span class="lbl">Journée bouclée</span><div class="hx"><span class="acc">'+ic('ok',30,1.5)+'</span><div><b>Tout est fait</b><em>Repose-toi, la suite est déjà calée.</em></div></div><button class="go" data-a="go" data-v="'+I_PROG+'">Voir ma progression</button></div>';
+    var frise='<div class="lbl" style="margin:6px 0 -6px 6px">Ta journée · '+nd+' sur '+it.length+'</div><div class="rz tl">'+it.map(function(q){var cur=q===nx;
+      return '<button class="tr'+(q.done?' dn':cur?' cu':'')+'" data-a="go" data-v="'+q.scr+'"><i>'+(q.done?ic('ok',13,2):'')+'</i><span class="th">'+hh(q.t)+'</span><span class="tt"><b>'+q.title+'</b><em>'+q.sub+'</em></span></button>'}).join('')+'</div>';
+    return header(dsub())+
+    '<div class="story"><h2>'+greet+'</h2><p>'+tone+' <b>('+fo+' %)</b>. Au programme : '+plan_.join(', ')+'.</p></div>'+
+    hero+frise+
     '<div class="rz pill3"><div><b>'+hm(sl)+'</b><span>Sommeil cible</span></div><div><b>S'+wi.w+' / '+PROG.horizon.weeks+'</b><span>Semaine</span></div><div><b>'+wi.dn+' / '+wi.pl+'</b><span>Séances</span></div></div>'+
-    '<div class="rz duo"><div><span class="acc">'+ic('bar',22,1.3)+'</span><b>'+(p.sport?p.sport.duration_min+' min':'—')+'</b><span class="lbl">'+(p.sport?'Séance':'Repos')+'</span></div><div><span class="acc">'+ic('moon',22,1.3)+'</span><b>'+p.sleep.bedtime+'</b><span class="lbl">Coucher</span></div></div>';
+    '<div class="sw"><button data-a="dd" data-v="-1">Hier</button><button class="on" data-a="dd" data-v="0">'+DN[pd(S.date).getDay()]+'</button><button data-a="dd" data-v="1">Demain</button></div>'+
+    express()+pesee();
   }
 
 
@@ -1026,7 +1071,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v22</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v24</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
