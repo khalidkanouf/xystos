@@ -593,13 +593,14 @@ function Phone(root,onChange){
   /* chronomètre : compte à rebours pour un exercice chronométré, sinon chrono libre */
   var crT=null;
   function crTxt(){var c=S.cr||{},el=(c.acc||0)+(c.on?Date.now()-c.t0:0),sec=c.mode==='down'?Math.max(0,Math.ceil((c.target*1000-el)/1000)):Math.floor(el/1000);return mmss(sec)}
-  function crHtml(e){var c=S.cr,down=!!(e&&e.duration_s&&e.kind!=='strength');if(!c.on&&!c.acc){c.mode=down?'down':'up';c.target=down?e.duration_s:0}
-    return '<div class="rz crn"><div><span class="lbl">Chrono'+(c.mode==='down'?' · '+c.target+' s':'')+'</span><b id="crv">'+crTxt()+'</b></div><div style="display:flex;gap:10px"><button class="rb" style="width:52px;height:52px" data-a="crgo" aria-label="'+(c.on?'Mettre en pause':'Lancer le chrono')+'">'+ic(c.on?'pause':'play',22,1.6)+'</button><button class="rb" style="width:52px;height:52px" data-a="crrs" aria-label="Remettre à zéro">'+ic('x',18,1.5)+'</button></div></div>'}
+  function isTimed(e){return !!(e&&e.duration_s&&e.kind!=='strength')}
+  /* exercice chronométré : le disque lance le compte à rebours (durée du programme) ; à 0 la série se valide et le repos démarre tout seul */
+  function crInit(e){var c=S.cr;if(isTimed(e)&&!c.on&&!c.acc){c.mode='down';c.target=e.duration_s}}
   function crReset(){if(crT){clearInterval(crT);crT=null}crLast=null;S.cr={on:false,acc:0,t0:0,mode:'up',target:0}}
   var crLast=null;
-  function crTick(){var el=root.querySelector('#crv');if(el)el.textContent=crTxt();var c=S.cr;
+  function crTick(){var el=root.querySelector('#crbig');if(el)el.textContent=crTxt();var c=S.cr;
     if(c&&c.on&&c.mode==='down'){var left=Math.max(0,Math.ceil((c.target*1000-(c.acc+Date.now()-c.t0))/1000));if(left!==crLast){crLast=left;if(left<=5)cdSound(left)}
-      if(left<=0){c.on=false;c.acc=c.target*1000;if(crT){clearInterval(crT);crT=null}crLast=null;render()}}}
+      if(left<=0){c.on=false;c.acc=c.target*1000;c.fin=true;if(crT){clearInterval(crT);crT=null}crLast=null;var dk=root.querySelector('.disc');if(dk)dk.click();else render()}}}
   function plan(){var d=dayOf(S.date);return d?d.plans['ABC'[pidx()]]:null}
   function exs(){var p=plan();return p&&p.sport?p.sport.exercises:[]}
   function total(e){return e.kind==='strength'||e.kind==='core'?e.sets:1}
@@ -827,14 +828,14 @@ function Phone(root,onChange){
       rail=railHtml(railFrac(e),lab2);
     }else{
       icons=[['rest','timer','Repos']];S.met='rest';
-      var big=e.duration_s?mmss(e.duration_s):(e.reps?rp:'');
-      core='<small>'+(e.kind==='core'?'Série '+n+' / '+tt:(blk[e.block]||'Exercice'))+'</small><span class="n">'+big+'</span><span class="u">'+(e.reps&&!e.duration_s?'reps':e.per_side?'par côté':'durée')+'</span>';
+      crInit(e);var big=isTimed(e)?crTxt():e.duration_s?mmss(e.duration_s):(e.reps?rp:'');
+      core='<small>'+(e.kind==='core'?'Série '+n+' / '+tt:(blk[e.block]||'Exercice'))+'</small><span class="n" id="crbig">'+big+'</span><span class="u">'+(e.reps&&!e.duration_s?'reps':e.per_side?'par côté':'durée')+'</span>';
       sub=(e.block?(blk[e.block]||e.block)+' · ':'')+(e.target||e.note||e.name);
       rail='';
     }
     if(e.target||e.note)extra='<div class="note" style="margin-top:-2px">'+(e.target?'Cible : '+e.target+(e.note?' · ':''):'')+(e.note||'')+'</div>';
     return topbar(e.name)+'<div class="s-sub">'+sub+'</div><div class="s-card">'+dialSvg(cardOn?N:1,cardOn?doneN:0,null,S.met,isS?icons:[['rest','timer','Repos']])+'<div class="core">'+core+'</div><button class="disc" data-a="sdone" aria-label="Série faite : lancer le repos"></button>'+rail+'</div>'+
-      '<div class="s-hint">Touche le disque en finissant '+(isS||e.kind==='core'?'la série : le repos démarre':'l\'exercice')+'</div>'+crHtml(e)+extra+
+      '<div class="s-hint">'+(isTimed(e)?(S.cr.on?'Touche le disque pour mettre en pause · la série se valide à 0':S.cr.acc&&!S.cr.fin?'En pause · touche le disque pour reprendre':'Touche le disque pour lancer le compte à rebours · la série se valide à 0'):'Touche le disque en finissant '+(isS||e.kind==='core'?'la série : le repos démarre':'l\'exercice'))+'</div>'+extra+
       (isS?'<div class="s-h"><span class="s-i">'+wic('rep')+'</span>Séries<span class="r">dernière fois · aujourd\'hui</span></div>'+barsHtml(e,tt,dn,dn):'');
   }
 
@@ -1025,7 +1026,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v21</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v22</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -1160,7 +1161,10 @@ function Phone(root,onChange){
     if(a==='rov'){var e5=curEx();S.ov=S.ov||{};S.ov[e5.id]=Math.max(15,restOf(e5)+(+v));render();return}
     if(a==='rcfg'){if(v==='beep')S.beep=!S.beep;else if(v==='auto')S.auto=!S.auto;render();return}
     if(a==='fin2'){if(d.sets.length&&!confirm('Terminer la séance ?'))return;if(!d.sets.length){S.ph='reason';render()}else finishSession(allDone()?'completed':'partial');return}
-    if(a==='sdone'){var e2=curEx();begin();var n2=exDone(e2)+1;
+    if(a==='sdone'){var e2=curEx();
+      if(isTimed(e2)&&!S.cr.fin){crInit(e2);var c2=S.cr;if(c2.on){c2.acc+=Date.now()-c2.t0;c2.on=false;if(crT){clearInterval(crT);crT=null}}else{crLast=null;c2.t0=Date.now();c2.on=true;if(!crT)crT=setInterval(crTick,200);unlockAudio()}render();return}
+      if(isTimed(e2))crReset();
+      begin();var n2=exDone(e2)+1;
       if(e2.kind==='strength')d.sets.push({exercise_id:e2.id,set:n2,reps:S.reps,load_kg:S.kg,difficulty:0});
       else d.sets.push(e2.duration_s?{exercise_id:e2.id,set:n2,duration_s:e2.duration_s}:{exercise_id:e2.id,set:n2,reps:e2.reps.min});
       d.done[e2.id]=n2;S.fbq=1;S.sel=undefined;
