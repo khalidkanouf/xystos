@@ -537,7 +537,16 @@ var DBX=(function(){
     if(!cur||Date.parse(o.generated_at)>Date.parse(cur.generated_at)){applyProg(o);return 'programme mis à jour (révision '+o.revision+')'}
     return 'programme à jour';
   }
+  /* journée en cours : un seul fichier par jour, le dernier état écrase le précédent ; reste en attente si le réseau manque */
+  var attLive=null,enLive=false;
+  async function viderLive(){
+    if(!attLive||enLive||!c.refresh)return;enLive=true;var q=attLive;
+    try{await upload('/'+dossier()+'live/'+q.date+'.json',q.text);if(attLive===q)attLive=null}catch(e){}
+    enLive=false;if(attLive&&attLive!==q)viderLive();
+  }
+  function live(date,text){if(!c.refresh)return;attLive={date:date,text:text};viderLive()}
   async function sync(){
+    viderLive();
     if(!c.refresh||enCours)return;enCours=true;ui.busy=true;redraw();
     try{
       var n=await vider(),r=await recevoir();
@@ -550,6 +559,7 @@ var DBX=(function(){
     retour().then(function(){if(c.refresh)sync()});
     document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&c.refresh)sync()});
     addEventListener('online',function(){if(c.refresh)sync()});
+    setInterval(function(){if(document.visibilityState==='visible'&&c.refresh)sync()},60000);
   }
 
   /* ---------- panneau des réglages ---------- */
@@ -582,7 +592,7 @@ var DBX=(function(){
     else if(a==='dbx-link')lier(tmp.link);
     else if(a==='dbx-copy'){var code=ui.code||linkCode();(navigator.clipboard?navigator.clipboard.writeText(code):Promise.reject()).then(function(){say('Code copié.')}).catch(function(){say('Sélectionne le code et copie-le à la main.')})}
   }
-  var api={_retour:retour,demarrer:demarrer,envoyer:envoyer,panel:panel,action:action,set:set,sync:sync,_c:c,_ui:ui};
+  var api={_retour:retour,demarrer:demarrer,envoyer:envoyer,live:live,panel:panel,action:action,set:set,sync:sync,_c:c,_ui:ui};
   window.DBX=api;
   return api;
 })();
@@ -917,6 +927,22 @@ function Phone(root,onChange){
     if(p)p.nutrition.meals.forEach(function(m,i){if(!fl[i])return;var ml=d.mlog&&d.mlog[i],v=mval(i),r={meal_id:m.id,name:m.name,time:m.time,status:ml?'modified':'eaten',kcal:v.k,protein_g:v.p,carbs_g:v.c,fat_g:v.f};if(ml)r.items=ml.items.map(itemTxt).join(' · ').slice(0,240);out.push(r)});
     (d.extra||[]).forEach(function(e){var v=itemsMac(e.items);out.push({name:e.name,status:'extra',kcal:v.k,protein_g:v.p,carbs_g:v.c,fat_g:v.f,items:e.items.map(itemTxt).join(' · ').slice(0,240)})});
     return out}
+
+  /* échange en direct : l'état de la journée en cours part vers le Mac quelques secondes après chaque saisie (fichier live/, sans effet sur le recalcul du plan) */
+  var liveT=null,liveLast='';
+  function liveSnap(){
+    if((S.sim&&S.sim.date===S.date)||typeof todayReal!=='function'||S.date!==todayReal())return null;
+    var d=D(),day=dayOf(S.date);if(!day||!d.m)return null;
+    var sp=day.plans.A.sport,fl=mflags(),T=tot();
+    return {schema:1,date:S.date,meals_done:fl.filter(Boolean).length,meals_total:fl.length,kcal:Math.round(T.k),meals_log:mealsLog(),
+      hydration_l:d.water*0.25,reading_min:d.rdBase+Math.floor(d.rdSec/60),work_min:Math.floor(d.wk.sec/60),
+      session:sp?{title:sp.title,status:d.status||(d.sets.length?'en cours':'à faire'),sets_done:d.sets.length}:null,
+      weight_kg:d.msd.w!=null?d.msd.w:null,saved:!!d.saved};
+  }
+  function liveCheck(){
+    try{if(!window.DBX||!DBX._c||!DBX._c.refresh)return;var o=liveSnap();if(!o)return;var j=JSON.stringify(o);if(j===liveLast)return;
+      clearTimeout(liveT);liveT=setTimeout(function(){liveLast=j;o.updated_at=new Date().toISOString();DBX.live(o.date,JSON.stringify(o,null,2)+'\n')},1500)}catch(x){console.warn('live',x)}
+  }
   function buildEntry(){
     var d=D(),day=dayOf(S.date),m=d.m,sp=day.plans.A.sport,idx=dayDiff(PROG.horizon.start,S.date)+1,sessions=[];
     if(sp&&d.status){var s={session_id:sp.session_id,status:d.status,sets:d.sets.slice()};if(d.reason)s.reason=d.reason;if(d.started){s.started_at=d.started;s.duration_min=d.dur}sessions.push(s)}
@@ -1071,7 +1097,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v24</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v25</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -1108,6 +1134,7 @@ function Phone(root,onChange){
     var tb=root.querySelector('.tabs button.on');if(tb&&tb.scrollIntoView)tb.scrollIntoView({inline:'center',block:'nearest'});
     saveDs();keepAwake();
     if(onChange)onChange(S.scr,S.th[S.scr],S.date);
+    liveCheck();
   }
   var tk=null;
   function ensureTk(){var any=Object.keys(S.ds).some(function(k){return S.ds[k].wk.run||S.ds[k].rdRun});if(any&&!tk)tk=setInterval(tickAll,1000);if(!any&&tk){clearInterval(tk);tk=null}}
