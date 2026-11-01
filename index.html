@@ -595,9 +595,11 @@ function Phone(root,onChange){
   function crTxt(){var c=S.cr||{},el=(c.acc||0)+(c.on?Date.now()-c.t0:0),sec=c.mode==='down'?Math.max(0,Math.ceil((c.target*1000-el)/1000)):Math.floor(el/1000);return mmss(sec)}
   function crHtml(e){var c=S.cr,down=!!(e&&e.duration_s&&e.kind!=='strength');if(!c.on&&!c.acc){c.mode=down?'down':'up';c.target=down?e.duration_s:0}
     return '<div class="rz crn"><div><span class="lbl">Chrono'+(c.mode==='down'?' · '+c.target+' s':'')+'</span><b id="crv">'+crTxt()+'</b></div><div style="display:flex;gap:10px"><button class="rb" style="width:52px;height:52px" data-a="crgo" aria-label="'+(c.on?'Mettre en pause':'Lancer le chrono')+'">'+ic(c.on?'pause':'play',22,1.6)+'</button><button class="rb" style="width:52px;height:52px" data-a="crrs" aria-label="Remettre à zéro">'+ic('x',18,1.5)+'</button></div></div>'}
-  function crReset(){if(crT){clearInterval(crT);crT=null}S.cr={on:false,acc:0,t0:0,mode:'up',target:0}}
+  function crReset(){if(crT){clearInterval(crT);crT=null}crLast=null;S.cr={on:false,acc:0,t0:0,mode:'up',target:0}}
+  var crLast=null;
   function crTick(){var el=root.querySelector('#crv');if(el)el.textContent=crTxt();var c=S.cr;
-    if(c&&c.on&&c.mode==='down'&&(c.acc+Date.now()-c.t0)>=c.target*1000){c.on=false;c.acc=c.target*1000;if(crT){clearInterval(crT);crT=null}beep(1320,320);setTimeout(function(){beep(1320,320)},450);try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}render()}}
+    if(c&&c.on&&c.mode==='down'){var left=Math.max(0,Math.ceil((c.target*1000-(c.acc+Date.now()-c.t0))/1000));if(left!==crLast){crLast=left;if(left<=5)cdSound(left)}
+      if(left<=0){c.on=false;c.acc=c.target*1000;if(crT){clearInterval(crT);crT=null}crLast=null;render()}}}
   function plan(){var d=dayOf(S.date);return d?d.plans['ABC'[pidx()]]:null}
   function exs(){var p=plan();return p&&p.sport?p.sport.exercises:[]}
   function total(e){return e.kind==='strength'||e.kind==='core'?e.sets:1}
@@ -718,14 +720,20 @@ function Phone(root,onChange){
   var WIC={dumb:'<path d="M3.5 9v6M6.5 7v10M17.5 7v10M20.5 9v6M6.5 12h11"/>',timer:'<circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V9.5M9.5 3h5"/>',bolt:'<path d="M13 3 6 13.5h5L10 21l7-10.5h-5z"/>',gauge:'<path d="M5 17.5a8 8 0 1 1 14 0"/><path d="m12 13.5 3-4"/>',list:'<path d="M9 7h11M9 12h11M9 17h11M4.5 7h.01M4.5 12h.01M4.5 17h.01"/>',back:'<path d="m14.5 6-6 6 6 6"/>',grid:'<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',rep:'<path d="M3.5 12h4l2.5-6 4 12 2.5-6h4"/>'};
   function wic(n){return '<svg viewBox="0 0 24 24" aria-hidden="true">'+WIC[n]+'</svg>'}
   var ac=null;
-  function beep(f,ms){try{if(S.beep===false)return;ac=ac||new(window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+ms/1000);if(S.vib&&navigator.vibrate)navigator.vibrate(ms>200?[200,80,200]:40)}catch(x){}}
+  function beep(f,ms,vol,quiet){try{if(S.beep===false)return;ac=ac||new(window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;o.frequency.value=f;g.gain.setValueAtTime(vol||.08,t);g.gain.exponentialRampToValueAtTime(.0008,t+ms/1000);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+ms/1000);if(S.vib&&navigator.vibrate&&!quiet)navigator.vibrate(ms>200?[200,80,200]:40)}catch(x){}}
+  /* compte à rebours sonore : à 5 s des tops qui montent d'un cran par seconde, puis un carillon final distinct à 0 */
+  function cdSound(n){if(n>=1&&n<=5){beep(520+(5-n)*130,n===1?150:100,.16,true);try{if(S.vib&&navigator.vibrate)navigator.vibrate(n===1?60:25)}catch(x){}}
+    else if(n<=0){[[880,0],[1175,140],[1568,280],[2093,420]].forEach(function(q){setTimeout(function(){beep(q[0],q[1]===420?600:220,.2,true)},q[1])});try{if(S.vib&&navigator.vibrate)navigator.vibrate([250,80,250,80,400])}catch(x){}}}
   function arcPath(cx,cy,r,a0,a1){var x0=cx+r*Math.cos(a0*Math.PI/180),y0=cy+r*Math.sin(a0*Math.PI/180),x1=cx+r*Math.cos(a1*Math.PI/180),y1=cy+r*Math.sin(a1*Math.PI/180);return 'M'+x0.toFixed(1)+','+y0.toFixed(1)+' A'+r+','+r+' 0 '+(a1-a0>180?1:0)+' 1 '+x1.toFixed(1)+','+y1.toFixed(1)}
   /* N séries quelconque : l'anneau se découpe en N arcs ; ring (0..1) pour un anneau continu */
   function dialSvg(N,done,ring,act,icons){
     var pts=[[66,10],[196,10],[252,127],[196,244],[66,244],[10,127]],p=pts.map(function(q){return q.join(',')}).join(' '),cx=131,cy=127,R=88;
     var gd='w'+(++gid),s='<svg class="d" viewBox="0 0 262 254" width="262" height="254" aria-hidden="true"><defs><linearGradient id="'+gd+'" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:rgba(255,255,255,.18)"/><stop offset=".5" style="stop-color:rgba(255,255,255,0)"/><stop offset="1" style="stop-color:rgba(0,0,0,.4)"/></linearGradient><radialGradient id="d'+gd+'" cx=".38" cy=".3" r=".9"><stop offset="0" style="stop-color:var(--hi)"/><stop offset=".6" style="stop-color:var(--bg)"/><stop offset="1" style="stop-color:var(--in)"/></radialGradient></defs>'+
-      '<polygon points="'+p+'" fill="var(--in)" stroke="var(--in)" stroke-width="8" stroke-linejoin="round"/>'+
-      '<polygon points="'+p+'" fill="none" stroke="url(#'+gd+')" stroke-width="2.5" stroke-linejoin="round"/>'+
+      '<clipPath id="k'+gd+'"><circle cx="'+cx+'" cy="'+cy+'" r="119"/></clipPath><filter id="f'+gd+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>'+
+      '<circle cx="'+cx+'" cy="'+cy+'" r="119" fill="var(--in)"/>'+
+      '<g clip-path="url(#k'+gd+')"><path d="M-40 -40H300V300H-40Z M'+(cx-119)+' '+cy+'a119 119 0 1 0 238 0a119 119 0 1 0 -238 0Z" fill-rule="evenodd" transform="translate(7 9)" filter="url(#f'+gd+')" style="fill:var(--lo)"/>'+
+      '<path d="M-40 -40H300V300H-40Z M'+(cx-119)+' '+cy+'a119 119 0 1 0 238 0a119 119 0 1 0 -238 0Z" fill-rule="evenodd" transform="translate(-6 -7)" filter="url(#f'+gd+')" style="fill:var(--hi);fill-opacity:.55"/></g>'+
+      '<circle cx="'+cx+'" cy="'+cy+'" r="119" fill="none" stroke="url(#'+gd+')" stroke-width="1.5" transform="rotate(180 '+cx+' '+cy+')"/>'+
       '<circle cx="'+cx+'" cy="'+cy+'" r="'+(R-10)+'" fill="url(#d'+gd+')" style="filter:drop-shadow(-5px -5px 8px var(--hi)) drop-shadow(7px 8px 11px var(--lo))"/>';
     var gq='q'+(++gid);s+=ringDefs(gq,cx,cy,R,4);
     if(N){var sp=360/N,gap=Math.min(5,sp/3);for(var i=0;i<N;i++){var a0=-90+i*sp+gap/2,a1=-90+(i+1)*sp-gap/2,d_=bpath(cx,cy,R,1.3,a0,a1);
@@ -1014,7 +1022,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v19</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v20</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -1071,7 +1079,7 @@ function Phone(root,onChange){
   }
   function upd(){var a=root.querySelector('#tm'),r=root.querySelector('#rg'),c=root.querySelector('#rgc'),nx=root.querySelector('#nx');if(a)a.textContent=mmss(S.t);if(r)r.innerHTML=arcRing(250,S.t/S.tot,10,true);if(c){var q=Math.max(0,Math.min(1,S.t/S.tot))*100;c.setAttribute('stroke-dasharray',q.toFixed(1)+' '+(100-q).toFixed(1))}if(nx){var ce=curEx();nx.textContent=ce&&exDone(ce)<total(ce)?'série '+(exDone(ce)+1)+' dans '+mmss(S.t):'exercice suivant'}}
   function go(n){stop();if(S.ph==='rest')S.ph='set';S.menu=false;S.scr=n;S.msg='';if(n===1&&exs().length)initEx();render()}
-  function startRest(e){S.ph='rest';S._d30=0;S.met='rest';S.sel=undefined;S.t=restOf(e);S.tot=S.t;render();stop();tm=setInterval(function(){S.t--;if(S.t>0&&S.t<=3)beep(880,90);if(S.t<=0){beep(1320,320);nextAfterRest();return}upd()},1000)}
+  function startRest(e){S.ph='rest';S._d30=0;S.met='rest';S.sel=undefined;S.t=restOf(e);S.tot=S.t;render();stop();tm=setInterval(function(){S.t--;if(S.t<=5)cdSound(S.t);if(S.t<=0){nextAfterRest();return}upd()},1000)}
   function nextAfterRest(){stop();var e=curEx();if(e&&exDone(e)>=total(e))nextEx();S.ph='set';S.met='rep';S.sel=undefined;render()}
   function railAdj(dir){var e=curEx(),d=D(),m=S.met;if(S.ph==='rest'&&m==='rest'){S.t=Math.max(5,S.t+15*dir);S.tot=Math.max(S.tot,S.t);upd();return}
     if(m==='rep'){if(S.ph==='rest'){var i=setIdx(e);if(i>=0)d.sets[i].reps=Math.max(0,d.sets[i].reps+dir)}S.reps=Math.max(0,S.reps+dir)}
@@ -1104,7 +1112,7 @@ function Phone(root,onChange){
     var a=b.getAttribute('data-a'),v=b.getAttribute('data-v'),k=b.getAttribute('data-k'),dd=parseFloat(b.getAttribute('data-d')),d=D();
     if(a==='simstart'){S.simPrev=S.date;stop();crReset();S.sim=simBuild();S.date=S.sim.date;delete S.ds.sim;var ds0=D();ds0.m={sleep_h:7,energy:3,pain:[],plan_chosen:'A'};S.scr=1;S.ph='set';S.msg='';S.menu=false;initEx();render();return}
     if(a==='simstop'){stop();crReset();S.sim=null;delete S.ds.sim;S.date=S.simPrev&&S.simPrev!==undefined?S.simPrev:todayClamp();S.ph='set';S.scr=0;S.msg='';initEx();render();return}
-    if(a==='crgo'){var c=S.cr;if(c.on){c.acc+=Date.now()-c.t0;c.on=false;if(crT){clearInterval(crT);crT=null}}else{if(c.mode==='down'&&c.acc>=c.target*1000)c.acc=0;c.t0=Date.now();c.on=true;if(!crT)crT=setInterval(crTick,200)}render();return}
+    if(a==='crgo'){var c=S.cr;if(c.on){c.acc+=Date.now()-c.t0;c.on=false;if(crT){clearInterval(crT);crT=null}}else{crLast=null;if(c.mode==='down'&&c.acc>=c.target*1000)c.acc=0;c.t0=Date.now();c.on=true;if(!crT)crT=setInterval(crTick,200)}render();return}
     if(a==='crrs'){var e9=curEx();crReset();S.cr.mode=e9&&e9.duration_s&&e9.kind!=='strength'?'down':'up';S.cr.target=S.cr.mode==='down'?e9.duration_s:0;render();return}
     if(a==='menu'){S.menu=!S.menu;render();return}
     if(a==='go'){go(+v);return}
