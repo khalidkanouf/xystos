@@ -253,6 +253,8 @@ body{margin:0;background:var(--page);color:var(--ptx);font-family:var(--sans);pa
 .dev .sg.new{border-top:1px solid var(--ring);color:var(--acc)}.dev .sg.new b{color:var(--acc)}
 .dev .ports{display:flex;align-items:center;gap:8px}.dev .ports .lbl{flex:1}
 .dev .ports button{min-width:46px;height:38px;border-radius:19px;padding:0 12px;font-size:14px;color:var(--tx);background:var(--surf);box-shadow:var(--sh),var(--rim)}.dev .simb{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 8px 8px 16px;border-radius:20px;background:var(--in);box-shadow:inset 2px 2px 6px var(--lo),inset -2px -2px 6px var(--hi);font-size:12.5px;color:var(--acc)}
+.s-top .s-ic[data-a=undo]{margin-right:10px}
+.dev .undob{position:absolute;left:16px;right:16px;bottom:128px;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 18px;border-radius:22px;font-size:14px;color:var(--tx);background:var(--surf);box-shadow:var(--sh),var(--rim)}.dev .undob button{height:36px;padding:0 16px;border-radius:18px;font-size:13.5px;color:var(--acc);background:var(--surf);box-shadow:var(--sh),var(--rim)}
 .dev .simb button{height:32px;padding:0 14px;border-radius:16px;font-size:12.5px;color:var(--tx);background:var(--surf);box-shadow:var(--sh),var(--rim)}
 .dev .crn{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 20px;border-radius:26px}
 .dev .crn b{display:block;font-weight:200;font-size:38px;letter-spacing:-.03em;line-height:1.05;font-variant-numeric:tabular-nums}
@@ -632,8 +634,8 @@ function Phone(root,onChange){
     if(c&&c.on&&c.mode==='down'){var left=Math.max(0,Math.ceil((c.target*1000-(c.acc+Date.now()-c.t0))/1000));if(left!==crLast){crLast=left;if(left<=5)cdSound(left)}
       if(left<=0){c.on=false;c.acc=c.target*1000;c.fin=true;if(crT){clearInterval(crT);crT=null}crLast=null;var dk=root.querySelector('.disc');if(dk)dk.click();else render()}}}
   function plan(){var d=dayOf(S.date);return d?d.plans['ABC'[pidx()]]:null}
-  function exs(){var p=plan();return p&&p.sport?p.sport.exercises:[]}
-  function total(e){return e.kind==='strength'||e.kind==='core'?e.sets:1}
+  function exs(){var p=plan();return p&&p.sport?p.sport.exercises.concat(D().ax||[]):[]}
+  function total(e){var x=(D().xs||{})[e.id]||0;return (e.kind==='strength'||e.kind==='core'?e.sets:1)+x}
   function info(e){var B={warmup:'Échauffement',main:'Bloc principal',core:'Abdos',cooldown:'Retour au calme'},t=[];if(e.block)t.push(B[e.block]);if(e.tempo)t.push('Tempo '+e.tempo.split('-').join('–'));if(e.per_side)t.push('par côté');return '<div class="note" style="text-align:center;margin:2px 0">'+t.join(' · ')+'</div>'+(e.target?'<div class="note" style="text-align:center">Cible : '+e.target+'</div>':'')+(e.note?'<div class="note" style="text-align:center">'+e.note+'</div>':'')}
   function exDone(e){return D().done[e.id]||0}
   function curEx(){var a=exs();return a.length?a[Math.min(S.ex,a.length-1)]:null}
@@ -678,7 +680,7 @@ function Phone(root,onChange){
   function stage(){var d=D(),fl=mflags(),a=[!!d.m,!!fl[0],!!fl[1],!!fl[2],d.status==='completed'||d.status==='partial'||d.status==='skipped',!!fl[3],d.saved];return a.filter(Boolean).length}
 
   function header(sub){
-    return simBanner()+'<div class="hd"><div><h1>'+SC[S.scr]+'</h1><div class="sub">'+ic('pin',15,1.4)+sub+'</div></div><button class="rb rz mb" data-a="menu" aria-label="Changer d\'écran" aria-expanded="'+S.menu+'" style="border-radius:19px">'+ic('grid',22,1.4)+'</button>'+
+    return simBanner()+'<div class="hd"><div><h1>'+SC[S.scr]+'</h1><div class="sub">'+ic('pin',15,1.4)+sub+'</div></div>'+undoBtn('rb rz mb')+'<button class="rb rz mb" data-a="menu" aria-label="Changer d\'écran" aria-expanded="'+S.menu+'" style="border-radius:19px">'+ic('grid',22,1.4)+'</button>'+
     (S.menu?'<div class="menu rz">'+SC.map(function(n,i){return '<button class="'+(i===S.scr?'on':'')+'" data-a="go" data-v="'+i+'">'+n+(i===S.scr?'<i></i>':'')+'</button>'}).join('')+'</div>':'')+'</div>';
   }
   function dsub(){var d=dayOf(S.date);return d?cap(fr(S.date))+' · semaine '+weekInfo().w:cap(fr(S.date))+' · hors programme'}
@@ -766,7 +768,8 @@ function Phone(root,onChange){
     return header(dsub())+
     '<div class="story"><h2>'+greet+'</h2><p>'+tone+' <b>('+fo+' %)</b>. Au programme : '+plan_.join(', ')+'.</p></div>'+
     hero+frise+
-    '<div class="rz pill3"><div><b>'+hm(sl)+'</b><span>Sommeil cible</span></div><div><b>S'+wi.w+' / '+PROG.horizon.weeks+'</b><span>Semaine</span></div><div><b>'+wi.dn+' / '+wi.pl+'</b><span>Séances</span></div></div>'+
+    (p.sport&&D().status&&!D().saved?'<div class="chips" style="justify-content:center"><button data-a="resume">Reprendre la séance</button></div>':'')+
+    calCard()+'<div class="rz pill3"><div><b>'+hm(sl)+'</b><span>Sommeil cible</span></div><div><b>S'+wi.w+' / '+PROG.horizon.weeks+'</b><span>Semaine</span></div><div><b>'+wi.dn+' / '+wi.pl+'</b><span>Séances</span></div></div>'+
     '<div class="sw"><button data-a="dd" data-v="-1">Hier</button><button class="on" data-a="dd" data-v="0">'+DN[pd(S.date).getDay()]+'</button><button data-a="dd" data-v="1">Demain</button></div>'+
     express()+pesee();
   }
@@ -818,8 +821,26 @@ function Phone(root,onChange){
   }
   function railHtml(frac,label){return '<div class="s-rail"><button data-a="rail" data-v="1" aria-label="Plus">+</button><div class="tk"><i style="top:'+Math.round((1-Math.max(0,Math.min(1,frac)))*92)+'%"></i></div><button data-a="rail" data-v="-1" aria-label="Moins">−</button><span class="s-vl">'+label+'</span></div>'}
   function railFrac(e){var m=S.met;if(S.ph==='rest'&&m==='rest')return S.t/Math.max(60,S.tot*1.5);if(m==='rep')return (S.reps||0)/20;if(m==='kg')return (S.kg||0)/150;return restOf(e)/300}
-  function topbar(t,i){return simBanner()+'<div class="s-top"><div class="s-tt"><span class="s-i">'+wic(i||'dumb')+'</span><span>'+t+'</span></div><button class="s-ic" data-a="fin2" aria-label="Terminer la séance">'+wic('grid')+'</button></div>'}
+  function topbar(t,i){return simBanner()+'<div class="s-top"><div class="s-tt"><span class="s-i">'+wic(i||'dumb')+'</span><span>'+t+'</span></div>'+undoBtn('s-ic')+'<button class="s-ic" data-a="fin2" aria-label="Terminer la séance">'+wic('grid')+'</button></div>'}
   function tabsHtml(on){return '<div class="fade"></div><div class="s-tabs">'+[['list',0,'Liste des exercices'],['dumb',1,'Série'],['timer',2,'Réglage du repos']].map(function(o){return '<button class="'+(on===o[1]?'on':'')+'" data-a="stab" data-v="'+o[1]+'" aria-label="'+o[2]+'">'+wic(o[0])+'</button>'}).join('')+'</div>'}
+  /* exercices que l'on peut ajouter à la volée : ceux du programme qui ne sont pas déjà dans la séance */
+  function exLib(){var out={},have={};exs().forEach(function(e){have[e.id]=1});
+    PROG.days.forEach(function(dy){['A','B','C'].forEach(function(v){var pl=dy.plans[v],all=(pl.sport?[pl.sport]:[]).concat(pl.sport_extra||[]);all.forEach(function(sp){sp.exercises.forEach(function(e){
+      if(have[e.id]||out[e.id]||e.kind==='mobility'||e.kind==='recovery'||e.kind==='cardio'&&!e.duration_s)return;
+      var c=JSON.parse(JSON.stringify(e));if(c.kind==='strength'){c.block='main';c.sets=c.sets||3}else if(c.kind==='core'){c.block='core';c.sets=c.sets||3}out[e.id]=c})})})});
+    return out}
+  function addexScreen(){
+    ACT=tabsHtml(1);var lib=exLib(),ids=Object.keys(lib).sort(function(x,y){return lib[x].name<lib[y].name?-1:1}),KL={strength:'Force',core:'Gainage'},h='<div class="s-top" style="justify-content:flex-start"><button class="s-ic" data-a="stab" data-v="1" aria-label="Retour">'+wic('back')+'</button></div><div class="s-big">Ajouter</div><div class="s-p">Un exercice en plus dans la séance du jour</div>';
+    if(!ids.length)return h+'<div class="note">Aucun autre exercice dans ton programme.</div>';
+    ['strength','core'].forEach(function(kd){var l=ids.filter(function(i){return lib[i].kind===kd});if(!l.length)return;h+='<div class="s-bl">'+KL[kd]+'</div>';
+      l.forEach(function(i){var x=lib[i];h+='<button class="s-r" data-a="addpick" data-v="'+i+'"><div class="nm"><b>'+x.name+'</b><span>'+(x.kind==='strength'?x.sets+' × '+(x.reps.min===x.reps.max?x.reps.min:x.reps.min+'–'+x.reps.max)+(x.load_kg?' · '+f1(x.load_kg)+' kg':''):x.sets+' × '+(x.duration_s?x.duration_s+' s':(x.reps?x.reps.min:''))+(x.per_side?' / côté':''))+'</span></div></button>'})});
+    var o=ids.filter(function(i){return lib[i].kind!=='strength'&&lib[i].kind!=='core'});
+    return h}
+  function calCard(){
+    var t=(typeof todayReal==='function'?todayReal():S.date),rows=PROG.days.filter(function(dy){return dy.date>=t}).slice(0,10).map(function(dy){
+      var sp=dy.plans.A.sport,ex=(dy.plans.A.sport_extra||[]),tt=sp?sp.title.replace(/ — .*/,'').replace(' · facultatif',''):ex.length?'Activités douces':'Repos',dn=doneOn(dy.date),dj=pd(dy.date);
+      return '<button class="tr'+(dn?' dn':dy.date===S.date?' cu':'')+'" data-a="calgo" data-v="'+dy.date+'"><i>'+(dn?ic('ok',13,2):'')+'</i><span class="th">'+['dim','lun','mar','mer','jeu','ven','sam'][dj.getDay()]+' '+dj.getDate()+'</span><span class="tt"><b>'+tt+'</b><em>'+(sp?sp.duration_min+' min':ex.length?ex.map(function(q){return q.duration_min}).reduce(function(a,b){return a+b},0)+' min':'récupération')+'</em></span></button>'});
+    return rows.length?'<div class="lbl" style="margin:6px 0 -6px 6px">Calendrier des séances</div><div class="rz tl">'+rows.join('')+'</div>':''}
   function setIdx(e){var m=exSets(e);if(S.sel!==undefined&&m[S.sel])return m[S.sel].i;return m.length?m[m.length-1].i:-1}
 
   /* ---------- Séance ---------- */
@@ -830,6 +851,7 @@ function Phone(root,onChange){
     if(!p.sport){ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:I_NUT,i:'ok',t:'Repas'},0.5,'Jour de repos');return header(dsub())+'<div class="rz" style="padding:30px 22px;text-align:center"><div class="hn" style="font-size:44px;font-weight:300">Repos</div><div class="note" style="margin-top:12px">Aucune séance prévue. La récupération fait partie du programme.</div></div>'}
     if(d.status&&S.ph==='set')S.ph='fin';
     var a=exs(),e=curEx(),dn=exDone(e),tt=total(e),n=Math.min(tt,dn+1);
+    if(S.ph==='addex')return addexScreen();
     if(S.ph==='reason'){
       ACT=actbar({a:'back',i:'l',t:'Retour'},null,0.5,'Motif');
       return header(p.sport.title)+'<div class="lbl" style="margin:0 0 -6px 6px">Pourquoi annuler ?</div>'+[['fatigue','Fatigue'],['temps','Manque de temps'],['douleur','Douleur'],['autre','Autre']].map(function(x){return '<button class="rz bt dif" data-a="reason" data-v="'+x[0]+'" style="height:72px"><div><b style="font-size:20px">'+x[1]+'</b></div></button>'}).join('');
@@ -837,7 +859,7 @@ function Phone(root,onChange){
     if(S.ph==='fin'){
       var st=d.status,fl=st==='completed'?'Séance terminée':st==='partial'?'Séance partielle':'Séance annulée',ns=d.sets.length;
       ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:I_SOIR,i:'ok',t:'Bilan'},1,fl);
-      return header(p.sport.title)+'<div class="rz" style="padding:28px 22px;text-align:center"><div class="hn" style="font-size:60px">'+ns+'<em class="u" style="font-size:20px">série'+(ns>1?'s':'')+'</em></div><div class="lbl" style="margin:10px 0 14px">'+fl+(d.reason?' · '+d.reason:'')+'</div><div class="note">'+(S.sim?'Simulation terminée : rien n\'est enregistré dans ton historique.':'Enregistré sur l\'iPhone. Il part dans l\'historique quand tu valides le bilan du soir.')+'</div>'+(d.saved?'':'<div class="chips" style="justify-content:center;margin-top:16px"><button data-a="resume">Reprendre la séance</button></div>')+'</div>';
+      return header(p.sport.title)+'<div class="rz" style="padding:28px 22px;text-align:center"><div class="hn" style="font-size:60px">'+ns+'<em class="u" style="font-size:20px">série'+(ns>1?'s':'')+'</em></div><div class="lbl" style="margin:10px 0 14px">'+fl+(d.reason?' · '+d.reason:'')+'</div><div class="note">'+(S.sim?'Simulation terminée : rien n\'est enregistré dans ton historique.':'Enregistré sur l\'iPhone. Il part dans l\'historique quand tu valides le bilan du soir.')+'</div>'+(d.saved?'':'<div class="chips" style="justify-content:center;margin-top:16px"><button data-a="resume">Reprendre la séance</button></div>')+'</div>'+calCard();
     }
     if(S.met===undefined){S.met='rep';S.ov={};S.beep=true;S.auto=true;S.fbq=1}
     var blk={warmup:'Échauffement',main:'Bloc principal',core:'Abdos',cooldown:'Retour au calme'};
@@ -847,6 +869,7 @@ function Phone(root,onChange){
         var t=total(x),dn_=exDone(x),dots='';for(var k=0;k<t;k++)dots+='<i class="'+(k<dn_?'on':'')+'"></i>';
         var det=x.kind==='strength'?x.sets+' × '+(x.reps.min===x.reps.max?x.reps.min:x.reps.min+'–'+x.reps.max)+(x.load_kg?' · '+f1(x.load_kg)+' kg':''):x.kind==='core'?x.sets+' × '+(x.duration_s?x.duration_s+' s':x.reps.min):Math.max(1,Math.round(x.duration_s/60))+' min';
         h+='<button class="s-r'+(dn_>=t?' dn':'')+(i===S.ex?' cur':'')+'" data-a="pickex" data-v="'+i+'"><div class="nm"><b>'+x.name+'</b><span>'+det+(x.per_side?' / côté':'')+'</span></div><div class="s-d">'+dots+'</div></button>'});
+      h+='<button class="s-r" data-a="addex"><div class="nm"><b>+ Ajouter un exercice</b><span>à la volée, dans la séance du jour</span></div></button>';
       return h;
     }
     if(S.ph==='cfg'){
@@ -858,6 +881,7 @@ function Phone(root,onChange){
       tg('beep','Bip avant la fin du repos',S.beep)+tg('auto','+ 30 s après une série « Dur »',S.auto)+tg('keep','Écran allumé pendant la séance',S.keep);
     }
     var isS=e.kind==='strength',cardOn=isS||e.kind==='core',N=cardOn?tt:1,doneN=cardOn?dn:0;
+    var qk='<div class="chips" style="justify-content:center;flex-wrap:wrap">'+(isS?'<button data-a="adj" data-k="reps" data-d="-1">− 1 rép.</button><button data-a="adj" data-k="reps" data-d="1">+ 1 rép.</button>':'')+'<button data-a="xset">+ 1 série</button><button data-a="addex">+ exercice</button></div>';
     var sub,core,rail,hint='',extra='',icons;
     if(S.ph==='rest'){
       ACT=tabsHtml(2);S.met=S.met==='rep'||S.met==='kg'||S.met==='rest'?S.met:'rest';
@@ -869,7 +893,7 @@ function Phone(root,onChange){
       rail=railHtml(railFrac(e),lab);
       hint=!isS?'':'<div class="s-sw" style="justify-content:center">'+['Facile','Bon','Dur'].map(function(x,i){return '<button class="'+(S.fbq===i?'on':'')+'" data-a="fb" data-v="'+i+'">'+x+'</button>'}).join('')+'</div>';
       var dial=dialSvg(null,0,S.t/S.tot,S.met,icons);
-      return topbar(e.name)+'<div class="s-sub" id="ssub">'+sub+'</div><div class="s-card">'+dial+'<div class="core">'+core+'</div><button class="disc" data-a="skip" aria-label="Passer le repos"></button>'+rail+'</div>'+hint+(isS?'<div class="s-h"><span class="s-i">'+wic('rep')+'</span>Séries<span class="r">touche une barre pour corriger</span></div>'+barsHtml(e,tt,dn,-1):'');
+      return topbar(e.name)+'<div class="s-sub" id="ssub">'+sub+'</div><div class="s-card">'+dial+'<div class="core">'+core+'</div><button class="disc" data-a="skip" aria-label="Passer le repos"></button>'+rail+'</div>'+hint+qk+(isS?'<div class="s-h"><span class="s-i">'+wic('rep')+'</span>Séries<span class="r">touche une barre pour corriger</span></div>'+barsHtml(e,tt,dn,-1):'');
     }
     /* phase 'set' */
     ACT=tabsHtml(1);
@@ -890,7 +914,7 @@ function Phone(root,onChange){
     }
     if(e.target||e.note)extra='<div class="note" style="margin-top:-2px">'+(e.target?'Cible : '+e.target+(e.note?' · ':''):'')+(e.note||'')+'</div>';
     return topbar(e.name)+'<div class="s-sub">'+sub+'</div><div class="s-card">'+dialSvg(cardOn?N:1,cardOn?doneN:0,null,S.met,isS?icons:[['rest','timer','Repos']])+'<div class="core">'+core+'</div><button class="disc" data-a="sdone" aria-label="Série faite : lancer le repos"></button>'+rail+'</div>'+
-      '<div class="s-hint">'+(isTimed(e)?(S.cr.on?'Touche le disque pour mettre en pause · la série se valide à 0':S.cr.acc&&!S.cr.fin?'En pause · touche le disque pour reprendre':'Touche le disque pour lancer le compte à rebours · la série se valide à 0'):'Touche le disque en finissant '+(isS||e.kind==='core'?'la série : le repos démarre':'l\'exercice'))+'</div>'+extra+
+      '<div class="s-hint">'+(isTimed(e)?(S.cr.on?'Touche le disque pour mettre en pause · la série se valide à 0':S.cr.acc&&!S.cr.fin?'En pause · touche le disque pour reprendre':'Touche le disque pour lancer le compte à rebours · la série se valide à 0'):'Touche le disque en finissant '+(isS||e.kind==='core'?'la série : le repos démarre':'l\'exercice'))+'</div>'+extra+qk+
       (isS?'<div class="s-h"><span class="s-i">'+wic('rep')+'</span>Séries<span class="r">dernière fois · aujourd\'hui</span></div>'+barsHtml(e,tt,dn,dn):'');
   }
 
@@ -930,6 +954,16 @@ function Phone(root,onChange){
 
   /* échange en direct : l'état de la journée en cours part vers le Mac quelques secondes après chaque saisie (fichier live/, sans effet sur le recalcul du plan) */
   var liveT=null,liveLast='',livePend=null;
+  /* retour arrière : un instantané de la journée avant chaque action ; « Annuler » rétablit le dernier (jusqu'à 30) */
+  var NOSNAP={undo:1,go:1,menu:1,pw:1,pwk:1,ptab:1,lift:1,dd:1,ddstart:1,th:1,threset:1,tog:1,rest:1,import:1,hv:1,jv:1,copy:1,pickex:1,stab:1,met:1,rail:1,bar:1,rcfg:1,rov:1,nextex:1,skip:1,back:1,crgo:1,crrs:1,simstart:1,simstop:1,calgo:1,addex:1,wtog:1,rtog:1},
+    UL={sdone:'Série validée',done:'Série validée',diff:'Série validée',mdone:'Série validée',fb:'Ressenti modifié',fin2:'Séance terminée',finish:'Séance terminée',reason:'Séance annulée',express:'Journée enregistrée',save:'Bilan enregistré',unsave:'Bilan rouvert',mok:'Matin validé',plan:'Plan changé',resume:'Séance rouverte',xset:'Série ajoutée',addpick:'Exercice ajouté',skip:'Repos passé',meal:'Repas coché',unmeal:'Repas décoché',mdel:'Repas supprimé',mesave:'Repas enregistré',medx:'Aliment retiré',mnsave:'Repas ajouté',mextra:'Repas en plus',hclear:'Historique effacé'},undoTm=null;
+  function snap(a){S.undo=S.undo||[];S.undo.push({k:(S.sim&&S.sim.date===S.date)?'sim':S.date,d:JSON.stringify(D()),h:JSON.stringify(S.hist),ph:S.ph,ex:S.ex,scr:S.scr,lbl:UL[a]||'Dernière action'});if(S.undo.length>30)S.undo.shift();S.undoT=Date.now()}
+  function undoBtn(cls){return (S.undo&&S.undo.length)?'<button class="'+cls+'" data-a="undo" aria-label="Annuler la dernière action" style="margin-left:auto"><span style="font-size:24px;line-height:1">↶</span></button>':''}
+  function undoBar(){
+    if(!S.undo||!S.undo.length||!S.undoT||Date.now()-S.undoT>9000)return;
+    root.insertAdjacentHTML('beforeend','<div class="undob"><span>'+S.undo[S.undo.length-1].lbl+'</span><button data-a="undo">Annuler</button></div>');
+    clearTimeout(undoTm);undoTm=setTimeout(function(){var el=root.querySelector('.undob');if(el)el.remove()},Math.max(300,9000-(Date.now()-S.undoT)))
+  }
   function liveSnap(){
     if((S.sim&&S.sim.date===S.date)||typeof todayReal!=='function'||S.date!==todayReal())return null;
     var d=D(),day=dayOf(S.date);if(!day||!d.m)return null;
@@ -1101,7 +1135,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v27</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v29</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -1136,6 +1170,7 @@ function Phone(root,onChange){
     root.innerHTML='<div class="isl"></div><div class="stat"><span>9:41</span><span><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor" aria-hidden="true"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none" aria-hidden="true"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".55"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/></svg></span></div><div class="scr">'+body+'</div>'+ACT+'<div class="hi"></div>';
     var nw=root.querySelector('.scr');if(nw)nw.scrollTop=sc;
     var tb=root.querySelector('.tabs button.on');if(tb&&tb.scrollIntoView)tb.scrollIntoView({inline:'center',block:'nearest'});
+    undoBar();
     saveDs();keepAwake();
     if(onChange)onChange(S.scr,S.th[S.scr],S.date);
     liveCheck();
@@ -1168,7 +1203,7 @@ function Phone(root,onChange){
     render()}
   function finishSession(st,reason){var d=D();d.status=st;if(reason)d.reason=reason;if(d.started)d.dur=Math.max(1,Math.round((Date.now()-d.t0)/60000));S.ph='fin';render()}
   function begin(){var d=D();if(!d.started){d.started=tzIso(S.date);d.t0=Date.now()}}
-  function setDate(dt){if(S.sim&&dt!==S.sim.date){S.sim=null;delete S.ds.sim}crReset();stop();Object.keys(S.ds).forEach(function(k){S.ds[k].wk.run=false;S.ds[k].rdRun=false});ensureTk();S.pw=0;S._wi=undefined;S.date=dt;S.ph='set';S.msg='';S.jv=false;initEx();render()}
+  function setDate(dt){S.undo=[];if(S.sim&&dt!==S.sim.date){S.sim=null;delete S.ds.sim}crReset();stop();Object.keys(S.ds).forEach(function(k){S.ds[k].wk.run=false;S.ds[k].rdRun=false});ensureTk();S.pw=0;S._wi=undefined;S.date=dt;S.ph='set';S.msg='';S.jv=false;initEx();render()}
   function copy(txt){
     function ok(){S.hm='Copié dans le presse-papiers.';render()}
     function fb(){var ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();var r=false;try{r=document.execCommand('copy')}catch(e){}document.body.removeChild(ta);S.hm=r?'Copié dans le presse-papiers.':'Copie refusée : sélectionne le texte du JSON.';render()}
@@ -1190,6 +1225,16 @@ function Phone(root,onChange){
     var b=e.target.closest('[data-a]');
     if(!b||!root.contains(b)){if(S.menu){S.menu=false;render()}return}
     var a=b.getAttribute('data-a'),v=b.getAttribute('data-v'),k=b.getAttribute('data-k'),dd=parseFloat(b.getAttribute('data-d')),d=D();
+    if(!NOSNAP[a]&&!(a==='adj'&&(k==='kg'||k==='reps')))snap(a);
+    if(a==='undo'){
+      var cur=JSON.stringify(D())+JSON.stringify(S.hist),u=null;
+      while(S.undo&&S.undo.length){u=S.undo.pop();if(u.d+u.h!==cur)break;u=null}
+      if(u){stop();crReset();S.ds[u.k]=JSON.parse(u.d);S.hist=JSON.parse(u.h);saveHist(S.hist);S.ph=u.ph==='rest'?'set':u.ph;S.ex=u.ex;S.scr=u.scr;S.sel=undefined;S.msg='';S.undoT=0;ensureTk()}
+      render();return}
+    if(a==='calgo'){setDate(v);S.scr=I_JOUR;render();return}
+    if(a==='xset'){var ex0=curEx();if(ex0){d.xs=d.xs||{};d.xs[ex0.id]=(d.xs[ex0.id]||0)+1}render();return}
+    if(a==='addex'){S.ph='addex';render();return}
+    if(a==='addpick'){var lib=exLib(),nw=lib[v];if(nw){d.ax=d.ax||[];d.ax.push(nw);S.ph='set';initEx();var ix=exs().length-1;pick(ix);S.sel=undefined}render();return}
     if(a==='simstart'){S.simPrev=S.date;stop();crReset();S.sim=simBuild();S.date=S.sim.date;delete S.ds.sim;var ds0=D();ds0.m={sleep_h:7,energy:3,pain:[],plan_chosen:'A'};S.scr=1;S.ph='set';S.msg='';S.menu=false;initEx();render();return}
     if(a==='simstop'){stop();crReset();S.sim=null;delete S.ds.sim;S.date=S.simPrev&&S.simPrev!==undefined?S.simPrev:todayClamp();S.ph='set';S.scr=0;S.msg='';initEx();render();return}
     if(a==='crgo'){var c=S.cr;if(c.on){c.acc+=Date.now()-c.t0;c.on=false;if(crT){clearInterval(crT);crT=null}}else{crLast=null;if(c.mode==='down'&&c.acc>=c.target*1000)c.acc=0;c.t0=Date.now();c.on=true;if(!crT)crT=setInterval(crTick,200)}render();return}
@@ -1310,7 +1355,7 @@ function Phone(root,onChange){
       if(futur()){S.msg='Cette journée n\'a pas encore eu lieu : elle s\'enregistre le jour même.';render();return}
       if(!d.m){S.msg='Fais d\'abord l\'évaluation du matin.';render();return}
       d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);DBX.envoyer(d.entry);S.msg='';S.hm='';render();return}
-    if(a==='resume'){d.status=null;d.reason=null;S.ph='set';initEx();render();return}
+    if(a==='resume'){d.status=null;d.reason=null;S.ph='set';S.scr=I_SEANCE;initEx();render();return}
     if(a==='unsave'){d.saved=false;render();return}
   });
   initEx();render();
