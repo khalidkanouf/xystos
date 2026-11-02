@@ -837,7 +837,7 @@ function Phone(root,onChange){
     if(S.ph==='fin'){
       var st=d.status,fl=st==='completed'?'Séance terminée':st==='partial'?'Séance partielle':'Séance annulée',ns=d.sets.length;
       ACT=actbar({a:'go',v:0,i:'l',t:'Accueil'},{a:'go',v:I_SOIR,i:'ok',t:'Bilan'},1,fl);
-      return header(p.sport.title)+'<div class="rz" style="padding:28px 22px;text-align:center"><div class="hn" style="font-size:60px">'+ns+'<em class="u" style="font-size:20px">série'+(ns>1?'s':'')+'</em></div><div class="lbl" style="margin:10px 0 14px">'+fl+(d.reason?' · '+d.reason:'')+'</div><div class="note">'+(S.sim?'Simulation terminée : rien n\'est enregistré dans ton historique.':'Enregistré sur l\'iPhone. Il part dans l\'historique quand tu valides le bilan du soir.')+'</div></div>';
+      return header(p.sport.title)+'<div class="rz" style="padding:28px 22px;text-align:center"><div class="hn" style="font-size:60px">'+ns+'<em class="u" style="font-size:20px">série'+(ns>1?'s':'')+'</em></div><div class="lbl" style="margin:10px 0 14px">'+fl+(d.reason?' · '+d.reason:'')+'</div><div class="note">'+(S.sim?'Simulation terminée : rien n\'est enregistré dans ton historique.':'Enregistré sur l\'iPhone. Il part dans l\'historique quand tu valides le bilan du soir.')+'</div>'+(d.saved?'':'<div class="chips" style="justify-content:center;margin-top:16px"><button data-a="resume">Reprendre la séance</button></div>')+'</div>';
     }
     if(S.met===undefined){S.met='rep';S.ov={};S.beep=true;S.auto=true;S.fbq=1}
     var blk={warmup:'Échauffement',main:'Bloc principal',core:'Abdos',cooldown:'Retour au calme'};
@@ -929,7 +929,7 @@ function Phone(root,onChange){
     return out}
 
   /* échange en direct : l'état de la journée en cours part vers le Mac quelques secondes après chaque saisie (fichier live/, sans effet sur le recalcul du plan) */
-  var liveT=null,liveLast='';
+  var liveT=null,liveLast='',livePend=null;
   function liveSnap(){
     if((S.sim&&S.sim.date===S.date)||typeof todayReal!=='function'||S.date!==todayReal())return null;
     var d=D(),day=dayOf(S.date);if(!day||!d.m)return null;
@@ -941,8 +941,12 @@ function Phone(root,onChange){
   }
   function liveCheck(){
     try{if(!window.DBX||!DBX._c||!DBX._c.refresh)return;var o=liveSnap();if(!o)return;var j=JSON.stringify(o);if(j===liveLast)return;
-      clearTimeout(liveT);liveT=setTimeout(function(){liveLast=j;o.updated_at=new Date().toISOString();DBX.live(o.date,JSON.stringify(o,null,2)+'\n')},1500)}catch(x){console.warn('live',x)}
+      clearTimeout(liveT);livePend=function(){livePend=null;liveLast=j;o.updated_at=new Date().toISOString();DBX.live(o.date,JSON.stringify(o,null,2)+'\n')};liveT=setTimeout(livePend,1500)}catch(x){console.warn('live',x)}
   }
+  /* iOS fige la page dès qu'on quitte l'app : l'envoi en attente part tout de suite, et au retour l'état courant est renvoyé */
+  function liveFlush(){if(livePend){clearTimeout(liveT);livePend()}}
+  document.addEventListener('visibilitychange',function(){if(document.hidden)liveFlush();else{liveLast='';liveCheck()}});
+  window.addEventListener('pagehide',liveFlush);
   function buildEntry(){
     var d=D(),day=dayOf(S.date),m=d.m,sp=day.plans.A.sport,idx=dayDiff(PROG.horizon.start,S.date)+1,sessions=[];
     if(sp&&d.status){var s={session_id:sp.session_id,status:d.status,sets:d.sets.slice()};if(d.reason)s.reason=d.reason;if(d.started){s.started_at=d.started;s.duration_min=d.dur}sessions.push(s)}
@@ -1097,7 +1101,7 @@ function Phone(root,onChange){
     var hs=JSON.stringify(S.hist,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;');
     return header('Préférences')+
     '<div class="lbl" style="margin:0 0 -6px 6px">Programme</div>'+
-    '<div class="rz set"><div><b>Application xystos-v25</b><span>Version installée sur ce téléphone</span></div></div>'+
+    '<div class="rz set"><div><b>Application xystos-v27</b><span>Version installée sur ce téléphone</span></div></div>'+
     '<div class="rz set"><div><b>Révision '+PROG.revision+'</b><span>'+PROG.horizon.start+' → '+PROG.horizon.end+' · '+PROG.days.length+' jours détaillés</span></div></div>'+
     '<div class="chips"><button data-a="import">Importer un programme</button></div><input type="file" id="pf" accept="application/json,.json" hidden>'+(S.hm&&S.scr===4?'<div class="note">'+S.hm+'</div>':'')+
     '<div class="rz set"><div><b>Jour simulé</b><span>'+cap(fr(S.date))+'</span></div><div class="rs"><button class="rb" data-a="dd" data-v="-1" aria-label="Jour précédent">'+ic('minus',22,1.5)+'</button><button class="rb acc" data-a="dd" data-v="1" aria-label="Jour suivant">'+ic('plus',22,1.7)+'</button></div></div>'+
@@ -1306,6 +1310,7 @@ function Phone(root,onChange){
       if(futur()){S.msg='Cette journée n\'a pas encore eu lieu : elle s\'enregistre le jour même.';render();return}
       if(!d.m){S.msg='Fais d\'abord l\'évaluation du matin.';render();return}
       d.entry=buildEntry();d.saved=true;S.hist=S.hist.filter(function(h){return h.date!==S.date});S.hist.push(d.entry);S.hist.sort(function(x,y){return x.date<y.date?-1:1});saveHist(S.hist);DBX.envoyer(d.entry);S.msg='';S.hm='';render();return}
+    if(a==='resume'){d.status=null;d.reason=null;S.ph='set';initEx();render();return}
     if(a==='unsave'){d.saved=false;render();return}
   });
   initEx();render();
